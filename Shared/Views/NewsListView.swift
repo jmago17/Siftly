@@ -84,6 +84,7 @@ struct NewsListView: View {
 
 struct NewsRowView: View {
     let newsItem: NewsItem
+    @State private var showingReader = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -140,13 +141,10 @@ struct NewsRowView: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .onTapGesture {
-            if let url = URL(string: newsItem.link) {
-                #if os(iOS)
-                UIApplication.shared.open(url)
-                #elseif os(macOS)
-                NSWorkspace.shared.open(url)
-                #endif
-            }
+            showingReader = true
+        }
+        .sheet(isPresented: $showingReader) {
+            ArticleReaderView(newsItem: newsItem)
         }
     }
 }

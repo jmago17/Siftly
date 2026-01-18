@@ -5,18 +5,63 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor
 class FeedsViewModel: ObservableObject {
     @Published var feeds: [RSSFeed] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
+    @Published var iCloudSyncEnabled = true
+
     private let userDefaultsKey = "rssFeeds"
     private let timeout: TimeInterval = 10.0
-    
+    private let cloudSync = CloudSyncService.shared
+    private var cancellables = Set<AnyCancellable>()
+
     init() {
         loadFromDisk()
+        setupCloudSync()
+    }
+
+    private func setupCloudSync() {
+        NotificationCenter.default.publisher(for: .cloudDataDidChange)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.syncFromCloud()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    func syncFromCloud() {
+        guard iCloudSyncEnabled else { return }
+
+        if let cloudFeeds = cloudSync.loadFeeds() {
+            // Merge cloud feeds with local feeds
+            mergeFeeds(cloudFeeds)
+        }
+    }
+
+    private func mergeFeeds(_ cloudFeeds: [RSSFeed]) {
+        var mergedFeeds = feeds
+
+        for cloudFeed in cloudFeeds {
+            if let index = mergedFeeds.firstIndex(where: { $0.id == cloudFeed.id }) {
+                // Update existing feed if cloud version is newer
+                if let cloudUpdate = cloudFeed.lastUpdated,
+                   let localUpdate = mergedFeeds[index].lastUpdated,
+                   cloudUpdate > localUpdate {
+                    mergedFeeds[index] = cloudFeed
+                }
+            } else {
+                // Add new feed from cloud
+                mergedFeeds.append(cloudFeed)
+            }
+        }
+
+        feeds = mergedFeeds
+        saveToDisk()
     }
     
     // MARK: - CRUD Operations
@@ -153,6 +198,11 @@ class FeedsViewModel: ObservableObject {
             let encoder = JSONEncoder()
             let data = try encoder.encode(feeds)
             UserDefaults.standard.set(data, forKey: userDefaultsKey)
+
+            // Sync to iCloud if enabled
+            if iCloudSyncEnabled {
+                cloudSync.saveFeeds(feeds)
+            }
         } catch {
             print("Error saving feeds: \(error)")
         }

@@ -47,7 +47,8 @@ struct ContentView: View {
 
             SettingsView(
                 newsViewModel: newsViewModel,
-                smartFoldersViewModel: smartFoldersViewModel
+                smartFoldersViewModel: smartFoldersViewModel,
+                feedsViewModel: feedsViewModel
             )
             .tabItem {
                 Label("Ajustes", systemImage: "gear")

@@ -62,9 +62,9 @@ class NewsViewModel: ObservableObject {
         // 3. Detect duplicates
         do {
             let duplicateGroups = try await service.detectDuplicates(newsItems: processedItems)
-            
+
             for group in duplicateGroups {
-                for var item in group.newsItems {
+                for item in group.newsItems {
                     if let index = processedItems.firstIndex(where: { $0.id == item.id }) {
                         processedItems[index].duplicateGroupID = group.id
                     }

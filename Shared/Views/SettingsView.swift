@@ -8,18 +8,23 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject var newsViewModel: NewsViewModel
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
+    @ObservedObject var feedsViewModel: FeedsViewModel
 
     @State private var claudeKey: String
     @State private var openAIKey: String
     @State private var selectedProvider: AIProvider
     @State private var showingManageFolders = false
+    @State private var showingOPML = false
+    @State private var iCloudSyncEnabled = true
 
-    init(newsViewModel: NewsViewModel, smartFoldersViewModel: SmartFoldersViewModel) {
+    init(newsViewModel: NewsViewModel, smartFoldersViewModel: SmartFoldersViewModel, feedsViewModel: FeedsViewModel) {
         self.newsViewModel = newsViewModel
         self.smartFoldersViewModel = smartFoldersViewModel
+        self.feedsViewModel = feedsViewModel
         _claudeKey = State(initialValue: newsViewModel.claudeAPIKey)
         _openAIKey = State(initialValue: newsViewModel.openAIAPIKey)
         _selectedProvider = State(initialValue: newsViewModel.selectedProvider)
+        _iCloudSyncEnabled = State(initialValue: feedsViewModel.iCloudSyncEnabled)
     }
 
     var body: some View {
@@ -90,6 +95,51 @@ struct SettingsView: View {
                     }
                 }
 
+                // iCloud Sync
+                Section {
+                    Toggle(isOn: $iCloudSyncEnabled) {
+                        Label("Sincronizar con iCloud", systemImage: "icloud")
+                    }
+                    .onChange(of: iCloudSyncEnabled) { _, newValue in
+                        feedsViewModel.iCloudSyncEnabled = newValue
+                        smartFoldersViewModel.iCloudSyncEnabled = newValue
+
+                        if newValue {
+                            feedsViewModel.syncFromCloud()
+                            smartFoldersViewModel.syncFromCloud()
+                        }
+                    }
+
+                    if iCloudSyncEnabled, let lastSync = CloudSyncService.shared.lastSyncDate {
+                        HStack {
+                            Text("Última sincronización")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text(lastSync, style: .relative)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Sincronización")
+                } footer: {
+                    Text("Sincroniza tus feeds y carpetas inteligentes entre todos tus dispositivos")
+                }
+
+                // OPML Import/Export
+                Section {
+                    Button {
+                        showingOPML = true
+                    } label: {
+                        Label("Importar/Exportar OPML", systemImage: "doc.badge.arrow.up")
+                    }
+                } header: {
+                    Text("Feeds")
+                } footer: {
+                    Text("Exporta tus feeds a formato OPML o importa feeds desde otros lectores RSS")
+                }
+
                 // Smart Folders Management
                 Section {
                     NavigationLink {
@@ -129,6 +179,9 @@ struct SettingsView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
             #endif
+            .sheet(isPresented: $showingOPML) {
+                OPMLImportExportView(feedsViewModel: feedsViewModel)
+            }
         }
     }
 }
@@ -189,6 +242,7 @@ struct ManageSmartFoldersView: View {
 #Preview {
     SettingsView(
         newsViewModel: NewsViewModel(),
-        smartFoldersViewModel: SmartFoldersViewModel()
+        smartFoldersViewModel: SmartFoldersViewModel(),
+        feedsViewModel: FeedsViewModel()
     )
 }

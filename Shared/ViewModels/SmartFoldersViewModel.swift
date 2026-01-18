@@ -5,20 +5,58 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor
 class SmartFoldersViewModel: ObservableObject {
     @Published var smartFolders: [SmartFolder] = []
-    
+    @Published var iCloudSyncEnabled = true
+
     private let userDefaultsKey = "smartFolders"
-    
+    private let cloudSync = CloudSyncService.shared
+    private var cancellables = Set<AnyCancellable>()
+
     init() {
         loadFromDisk()
-        
+
         // Add default folders if empty
         if smartFolders.isEmpty {
             addDefaultFolders()
         }
+
+        setupCloudSync()
+    }
+
+    private func setupCloudSync() {
+        NotificationCenter.default.publisher(for: .cloudDataDidChange)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.syncFromCloud()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    func syncFromCloud() {
+        guard iCloudSyncEnabled else { return }
+
+        if let cloudFolders = cloudSync.loadSmartFolders() {
+            mergeSmartFolders(cloudFolders)
+        }
+    }
+
+    private func mergeSmartFolders(_ cloudFolders: [SmartFolder]) {
+        var mergedFolders = smartFolders
+
+        for cloudFolder in cloudFolders {
+            if !mergedFolders.contains(where: { $0.id == cloudFolder.id }) {
+                // Add new folder from cloud
+                mergedFolders.append(cloudFolder)
+            }
+        }
+
+        smartFolders = mergedFolders
+        saveToDisk()
     }
     
     // MARK: - CRUD Operations
@@ -78,6 +116,11 @@ class SmartFoldersViewModel: ObservableObject {
             let encoder = JSONEncoder()
             let data = try encoder.encode(smartFolders)
             UserDefaults.standard.set(data, forKey: userDefaultsKey)
+
+            // Sync to iCloud if enabled
+            if iCloudSyncEnabled {
+                cloudSync.saveSmartFolders(smartFolders)
+            }
         } catch {
             print("Error saving smart folders: \(error)")
         }

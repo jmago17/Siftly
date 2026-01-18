@@ -15,30 +15,7 @@ class AppleIntelligenceService: AIService {
         // Use Apple Intelligence APIs for quality scoring
         // Note: This is a simplified implementation
         // In production, you'd use Writing Tools API or similar
-        
-        let prompt = """
-        Analyze this news article and score its quality from 0-100.
-        
-        Title: \(newsItem.title)
-        Summary: \(newsItem.summary)
-        
-        Evaluate:
-        - Is it clickbait?
-        - Is it spam?
-        - Is it advertisement?
-        - Overall content quality (high/medium/low)
-        
-        Respond in JSON format:
-        {
-            "score": 85,
-            "isClickbait": false,
-            "isSpam": false,
-            "isAdvertisement": false,
-            "contentQuality": "high",
-            "reasoning": "Well-written article with factual information"
-        }
-        """
-        
+
         // Simulate Apple Intelligence analysis
         // In real implementation, use Writing Tools or Foundation LLM APIs
         let score = analyzeContent(newsItem)

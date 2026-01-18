@@ -66,6 +66,7 @@ struct SmartFolderDetailView: View {
     let newsItems: [NewsItem]
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
     @State private var isExpanded = false
+    @State private var selectedNewsItem: NewsItem?
 
     var body: some View {
         DisclosureGroup(isExpanded: $isExpanded) {
@@ -88,13 +89,7 @@ struct SmartFolderDetailView: View {
                     .padding(.vertical, 4)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        if let url = URL(string: item.link) {
-                            #if os(iOS)
-                            UIApplication.shared.open(url)
-                            #elseif os(macOS)
-                            NSWorkspace.shared.open(url)
-                            #endif
-                        }
+                        selectedNewsItem = item
                     }
                 }
 
@@ -142,6 +137,9 @@ struct SmartFolderDetailView: View {
                     .labelsHidden()
                 }
             }
+        }
+        .sheet(item: $selectedNewsItem) { item in
+            ArticleReaderView(newsItem: item)
         }
     }
 }

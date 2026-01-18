@@ -98,7 +98,7 @@ struct SidebarView: View {
             AddSmartFolderView(smartFoldersViewModel: smartFoldersViewModel)
         }
         .sheet(isPresented: $showingSettings) {
-            SettingsView(newsViewModel: newsViewModel, smartFoldersViewModel: smartFoldersViewModel)
+            SettingsView(newsViewModel: newsViewModel, smartFoldersViewModel: smartFoldersViewModel, feedsViewModel: feedsViewModel)
         }
     }
 }
