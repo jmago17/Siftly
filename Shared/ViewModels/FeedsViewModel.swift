@@ -127,7 +127,7 @@ class FeedsViewModel: ObservableObject {
         return allItems
     }
     
-    private func fetchFeed(_ feed: RSSFeed) async throws -> [NewsItem] {
+    func fetchFeed(_ feed: RSSFeed) async throws -> [NewsItem] {
         guard let url = URL(string: feed.url) else {
             throw FeedError.invalidURL
         }

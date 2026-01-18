@@ -106,7 +106,7 @@ class NewsViewModel: ObservableObject {
     
     func getDuplicateGroups() -> [DuplicateGroup] {
         var groups: [UUID: [NewsItem]] = [:]
-        
+
         for item in newsItems {
             if let groupID = item.duplicateGroupID {
                 if groups[groupID] == nil {
@@ -115,9 +115,26 @@ class NewsViewModel: ObservableObject {
                 groups[groupID]?.append(item)
             }
         }
-        
+
         return groups.compactMap { (id, items) in
             items.count > 1 ? DuplicateGroup(id: id, newsItems: items) : nil
+        }
+    }
+
+    // MARK: - Read Status Management
+
+    func markAsRead(_ itemID: String, isRead: Bool) {
+        if let index = newsItems.firstIndex(where: { $0.id == itemID }) {
+            newsItems[index].isRead = isRead
+        }
+    }
+
+    func markAllAsRead(withScoreBelow threshold: Int) {
+        for index in newsItems.indices {
+            if let score = newsItems[index].qualityScore?.overallScore,
+               score < threshold {
+                newsItems[index].isRead = true
+            }
         }
     }
     

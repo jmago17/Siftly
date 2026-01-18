@@ -12,6 +12,11 @@ struct NewsListView: View {
     @State private var selectedFeedID: UUID?
     @State private var selectedSmartFolderID: UUID?
     @State private var isRefreshing = false
+    @State private var readFilter: ReadFilter = .all
+    @State private var minScoreFilter: Int = 0
+    @State private var showingFilters = false
+    @State private var showingBulkActions = false
+    @State private var bulkActionThreshold: Int = 50
 
     var body: some View {
         Group {
@@ -22,32 +27,99 @@ struct NewsListView: View {
                     Text("Añade feeds RSS para comenzar a ver noticias")
                 }
             } else {
-                List {
-                    ForEach(filteredNews) { item in
-                        NewsRowView(newsItem: item)
+                VStack(spacing: 0) {
+                    // Filter chips
+                    if readFilter != .all || minScoreFilter > 0 {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                if readFilter != .all {
+                                    FilterChip(
+                                        text: readFilter.rawValue,
+                                        systemImage: "book"
+                                    ) {
+                                        readFilter = .all
+                                    }
+                                }
+
+                                if minScoreFilter > 0 {
+                                    FilterChip(
+                                        text: "Score ≥ \(minScoreFilter)",
+                                        systemImage: "star"
+                                    ) {
+                                        minScoreFilter = 0
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 8)
+                        }
+                        #if os(iOS)
+                        .background(Color(uiColor: .systemBackground))
+                        #else
+                        .background(Color(nsColor: .windowBackgroundColor))
+                        #endif
                     }
-                }
-                .refreshable {
-                    await refreshNews()
+
+                    List {
+                        ForEach(filteredNews) { item in
+                            NewsRowView(newsItem: item)
+                        }
+                    }
+                    .refreshable {
+                        await refreshNews()
+                    }
                 }
             }
         }
-        .navigationTitle("Noticias")
+        .navigationTitle("Noticias (\(filteredNews.count))")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                if newsViewModel.isProcessing {
-                    ProgressView()
-                        .scaleEffect(0.7)
-                } else {
+                Menu {
                     Button {
-                        Task {
-                            await refreshNews()
-                        }
+                        showingFilters = true
                     } label: {
-                        Image(systemName: "arrow.clockwise")
+                        Label("Filtros", systemImage: "line.3.horizontal.decrease.circle")
                     }
+
+                    Divider()
+
+                    Button {
+                        showingBulkActions = true
+                    } label: {
+                        Label("Acciones masivas", systemImage: "checklist")
+                    }
+
+                    Divider()
+
+                    if newsViewModel.isProcessing {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                    } else {
+                        Button {
+                            Task {
+                                await refreshNews()
+                            }
+                        } label: {
+                            Label("Actualizar", systemImage: "arrow.clockwise")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
                 }
             }
+        }
+        .sheet(isPresented: $showingFilters) {
+            FilterSettingsView(
+                readFilter: $readFilter,
+                minScoreFilter: $minScoreFilter,
+                feedName: "todas las noticias"
+            )
+        }
+        .sheet(isPresented: $showingBulkActions) {
+            BulkActionsView(
+                newsViewModel: newsViewModel,
+                threshold: $bulkActionThreshold
+            )
         }
         .overlay {
             if isRefreshing {
@@ -60,10 +132,32 @@ struct NewsListView: View {
     }
 
     private var filteredNews: [NewsItem] {
-        newsViewModel.getNewsItems(
+        var news = newsViewModel.getNewsItems(
             for: selectedFeedID,
             smartFolderID: selectedSmartFolderID
         )
+
+        // Filter by read status
+        switch readFilter {
+        case .all:
+            break
+        case .unread:
+            news = news.filter { !$0.isRead }
+        case .read:
+            news = news.filter { $0.isRead }
+        }
+
+        // Filter by score
+        if minScoreFilter > 0 {
+            news = news.filter { item in
+                guard let score = item.qualityScore?.overallScore else {
+                    return false
+                }
+                return score >= minScoreFilter
+            }
+        }
+
+        return news
     }
 
     private func refreshNews() async {
@@ -187,6 +281,148 @@ struct Badge: View {
             .background(color.opacity(0.2))
             .foregroundColor(color)
             .clipShape(Capsule())
+    }
+}
+
+// MARK: - Filter Chip
+
+struct FilterChip: View {
+    let text: String
+    let systemImage: String
+    let onRemove: () -> Void
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: systemImage)
+                .font(.caption)
+            Text(text)
+                .font(.caption)
+            Button {
+                onRemove()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.caption)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.blue.opacity(0.2))
+        .foregroundColor(.blue)
+        .clipShape(Capsule())
+    }
+}
+
+// MARK: - Bulk Actions View
+
+struct BulkActionsView: View {
+    @ObservedObject var newsViewModel: NewsViewModel
+    @Binding var threshold: Int
+    @Environment(\.dismiss) private var dismiss
+    @State private var showingConfirmation = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("Marca automáticamente como leídas todas las noticias cuya puntuación de calidad esté por debajo del umbral seleccionado.")
+                        .font(.callout)
+                        .foregroundColor(.secondary)
+                } header: {
+                    Text("Descripción")
+                }
+
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Umbral de puntuación:")
+                            Spacer()
+                            Text("\(threshold)")
+                                .fontWeight(.bold)
+                                .foregroundColor(scoreColor)
+                        }
+
+                        Slider(value: Binding(
+                            get: { Double(threshold) },
+                            set: { threshold = Int($0) }
+                        ), in: 0...100, step: 5)
+
+                        HStack {
+                            Image(systemName: "info.circle")
+                                .foregroundColor(.blue)
+                            Text("Se marcarán como leídas las noticias con puntuación < \(threshold)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Configuración")
+                }
+
+                Section {
+                    let affectedCount = newsViewModel.newsItems.filter { item in
+                        guard let score = item.qualityScore?.overallScore else { return false }
+                        return score < threshold && !item.isRead
+                    }.count
+
+                    if affectedCount > 0 {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle")
+                                .foregroundColor(.orange)
+                            Text("\(affectedCount) noticias serán marcadas como leídas")
+                                .font(.callout)
+                        }
+                    } else {
+                        HStack {
+                            Image(systemName: "checkmark.circle")
+                                .foregroundColor(.green)
+                            Text("No hay noticias que cumplan este criterio")
+                                .font(.callout)
+                        }
+                    }
+
+                    Button {
+                        showingConfirmation = true
+                    } label: {
+                        Label("Marcar como leídas", systemImage: "checkmark.circle.fill")
+                    }
+                    .disabled(affectedCount == 0)
+                } header: {
+                    Text("Acción")
+                }
+            }
+            .navigationTitle("Acciones Masivas")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cerrar") {
+                        dismiss()
+                    }
+                }
+            }
+            .confirmationDialog(
+                "¿Marcar noticias como leídas?",
+                isPresented: $showingConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Marcar como leídas", role: .destructive) {
+                    newsViewModel.markAllAsRead(withScoreBelow: threshold)
+                    dismiss()
+                }
+                Button("Cancelar", role: .cancel) { }
+            } message: {
+                Text("Esta acción no se puede deshacer")
+            }
+        }
+    }
+
+    private var scoreColor: Color {
+        switch threshold {
+        case 0..<40: return .red
+        case 40..<70: return .orange
+        default: return .green
+        }
     }
 }
 

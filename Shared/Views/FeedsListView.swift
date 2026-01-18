@@ -7,6 +7,7 @@ import SwiftUI
 
 struct FeedsListView: View {
     @ObservedObject var feedsViewModel: FeedsViewModel
+    @ObservedObject var newsViewModel: NewsViewModel
     @State private var showingAddFeed = false
 
     var body: some View {
@@ -25,7 +26,15 @@ struct FeedsListView: View {
             } else {
                 List {
                     ForEach(feedsViewModel.feeds) { feed in
-                        FeedDetailRowView(feed: feed, feedsViewModel: feedsViewModel)
+                        NavigationLink {
+                            FeedNewsView(
+                                feed: feed,
+                                newsViewModel: newsViewModel,
+                                feedsViewModel: feedsViewModel
+                            )
+                        } label: {
+                            FeedDetailRowView(feed: feed, feedsViewModel: feedsViewModel)
+                        }
                     }
                     .onDelete { indexSet in
                         indexSet.forEach { index in
@@ -121,6 +130,9 @@ struct FeedDetailRowView: View {
 
 #Preview {
     NavigationStack {
-        FeedsListView(feedsViewModel: FeedsViewModel())
+        FeedsListView(
+            feedsViewModel: FeedsViewModel(),
+            newsViewModel: NewsViewModel()
+        )
     }
 }

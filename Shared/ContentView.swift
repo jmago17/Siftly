@@ -27,7 +27,10 @@ struct ContentView: View {
             .tag(0)
 
             NavigationStack {
-                FeedsListView(feedsViewModel: feedsViewModel)
+                FeedsListView(
+                    feedsViewModel: feedsViewModel,
+                    newsViewModel: newsViewModel
+                )
             }
             .tabItem {
                 Label("Feeds", systemImage: "antenna.radiowaves.left.and.right")
