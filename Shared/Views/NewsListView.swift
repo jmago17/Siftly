@@ -61,8 +61,8 @@ struct NewsListView: View {
                     }
 
                     List {
-                        ForEach(filteredNews) { item in
-                            NewsRowView(newsItem: item)
+                        ForEach(filteredDeduplicatedNews) { item in
+                            DeduplicatedNewsRowView(newsItem: item, newsViewModel: newsViewModel)
                         }
                     }
                     .refreshable {
@@ -71,7 +71,7 @@ struct NewsListView: View {
                 }
             }
         }
-        .navigationTitle("Noticias (\(filteredNews.count))")
+        .navigationTitle("Noticias (\(filteredDeduplicatedNews.count))")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
@@ -131,8 +131,8 @@ struct NewsListView: View {
         }
     }
 
-    private var filteredNews: [NewsItem] {
-        var news = newsViewModel.getNewsItems(
+    private var filteredDeduplicatedNews: [DeduplicatedNewsItem] {
+        var news = newsViewModel.getDeduplicatedNewsItems(
             for: selectedFeedID,
             smartFolderID: selectedSmartFolderID
         )
@@ -176,9 +176,12 @@ struct NewsListView: View {
     }
 }
 
-struct NewsRowView: View {
-    let newsItem: NewsItem
+struct DeduplicatedNewsRowView: View {
+    let newsItem: DeduplicatedNewsItem
+    @ObservedObject var newsViewModel: NewsViewModel
     @State private var showingReader = false
+    @State private var selectedSourceURL: String?
+    @State private var showingSourceSelector = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -196,10 +199,23 @@ struct NewsRowView: View {
             }
 
             HStack {
-                // Feed name
-                Text(newsItem.feedName)
-                    .font(.caption)
+                // Sources
+                if newsItem.hasDuplicates {
+                    HStack(spacing: 4) {
+                        Image(systemName: "doc.on.doc")
+                            .font(.caption2)
+                        Text("\(newsItem.sources.count) fuentes")
+                            .font(.caption)
+                    }
                     .foregroundColor(.blue)
+                    .onTapGesture {
+                        showingSourceSelector = true
+                    }
+                } else {
+                    Text(newsItem.primarySource.feedName)
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
 
                 Spacer()
 
@@ -227,7 +243,7 @@ struct NewsRowView: View {
                 if newsItem.qualityScore?.isAdvertisement == true {
                     Badge(text: "Anuncio", color: .purple)
                 }
-                if newsItem.duplicateGroupID != nil {
+                if newsItem.hasDuplicates {
                     Badge(text: "Duplicado", color: .gray)
                 }
             }
@@ -235,10 +251,29 @@ struct NewsRowView: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .onTapGesture {
+            // Open primary source by default
+            selectedSourceURL = newsItem.primarySource.link
             showingReader = true
         }
         .sheet(isPresented: $showingReader) {
-            ArticleReaderView(newsItem: newsItem)
+            if let url = selectedSourceURL {
+                ArticleReaderView(url: url, title: newsItem.title)
+                    .onDisappear {
+                        // Mark as read when reader closes
+                        newsItem.primarySource.markAsRead(true)
+                    }
+            }
+        }
+        .confirmationDialog("Seleccionar fuente", isPresented: $showingSourceSelector, titleVisibility: .visible) {
+            ForEach(newsItem.sources) { source in
+                Button(source.feedName) {
+                    selectedSourceURL = source.link
+                    showingReader = true
+                }
+            }
+            Button("Cancelar", role: .cancel) { }
+        } message: {
+            Text("Elige la fuente que quieres leer")
         }
     }
 }

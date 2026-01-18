@@ -79,27 +79,76 @@ class NewsViewModel: ObservableObject {
     }
     
     // MARK: - Filtering
-    
+
     func getNewsItems(for feedID: UUID? = nil, smartFolderID: UUID? = nil) -> [NewsItem] {
         var filtered = newsItems
-        
+
         if let feedID = feedID {
             filtered = filtered.filter { $0.feedID == feedID }
         }
-        
+
         if let smartFolderID = smartFolderID {
             filtered = filtered.filter { $0.smartFolderIDs.contains(smartFolderID) }
         }
-        
+
         // Sort by quality score (high to low), then by date
         return filtered.sorted { item1, item2 in
             let score1 = item1.qualityScore?.overallScore ?? 50
             let score2 = item2.qualityScore?.overallScore ?? 50
-            
+
             if score1 != score2 {
                 return score1 > score2
             }
-            
+
+            return (item1.pubDate ?? Date.distantPast) > (item2.pubDate ?? Date.distantPast)
+        }
+    }
+
+    /// Get deduplicated news items (show duplicates only once with multiple sources)
+    func getDeduplicatedNewsItems(for feedID: UUID? = nil, smartFolderID: UUID? = nil) -> [DeduplicatedNewsItem] {
+        let items = getNewsItems(for: feedID, smartFolderID: smartFolderID)
+
+        // Group items by duplicate group ID
+        var grouped: [UUID?: [NewsItem]] = [:]
+        var nonDuplicates: [NewsItem] = []
+
+        for item in items {
+            if let groupID = item.duplicateGroupID {
+                if grouped[groupID] == nil {
+                    grouped[groupID] = []
+                }
+                grouped[groupID]?.append(item)
+            } else {
+                nonDuplicates.append(item)
+            }
+        }
+
+        // Create deduplicated items
+        var result: [DeduplicatedNewsItem] = []
+
+        // Add grouped duplicates (one item per group)
+        for (_, duplicates) in grouped {
+            if duplicates.count > 1 {
+                result.append(DeduplicatedNewsItem(duplicates: duplicates))
+            } else if let single = duplicates.first {
+                result.append(DeduplicatedNewsItem(from: single))
+            }
+        }
+
+        // Add non-duplicate items
+        for item in nonDuplicates {
+            result.append(DeduplicatedNewsItem(from: item))
+        }
+
+        // Sort by quality score and date
+        return result.sorted { item1, item2 in
+            let score1 = item1.qualityScore?.overallScore ?? 50
+            let score2 = item2.qualityScore?.overallScore ?? 50
+
+            if score1 != score2 {
+                return score1 > score2
+            }
+
             return (item1.pubDate ?? Date.distantPast) > (item2.pubDate ?? Date.distantPast)
         }
     }

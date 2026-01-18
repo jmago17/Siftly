@@ -26,7 +26,7 @@ struct FeedNewsView: View {
             } else {
                 List {
                     ForEach(filteredNews) { item in
-                        NewsRowView(newsItem: item)
+                        DeduplicatedNewsRowView(newsItem: item, newsViewModel: newsViewModel)
                     }
                 }
                 .refreshable {
@@ -76,8 +76,8 @@ struct FeedNewsView: View {
         }
     }
 
-    private var filteredNews: [NewsItem] {
-        var news = newsViewModel.getNewsItems(for: feed.id)
+    private var filteredNews: [DeduplicatedNewsItem] {
+        var news = newsViewModel.getDeduplicatedNewsItems(for: feed.id)
 
         // Filter by read status
         switch readFilter {
@@ -117,7 +117,10 @@ struct FeedNewsView: View {
 
     private func markAllAsRead() {
         for item in filteredNews {
-            newsViewModel.markAsRead(item.id, isRead: true)
+            // Mark all sources as read
+            for source in item.sources {
+                newsViewModel.markAsRead(source.id, isRead: true)
+            }
         }
     }
 }

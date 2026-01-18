@@ -13,7 +13,10 @@ import WebKit
 #endif
 
 struct ArticleReaderView: View {
-    let newsItem: NewsItem
+    let url: String
+    let title: String
+    let newsItem: NewsItem?
+
     @Environment(\.dismiss) private var dismiss
 
     @State private var isLoading = true
@@ -22,10 +25,24 @@ struct ArticleReaderView: View {
     @State private var showingSummary = false
     @State private var errorMessage: String?
 
+    // Initialize with NewsItem (legacy)
+    init(newsItem: NewsItem) {
+        self.newsItem = newsItem
+        self.url = newsItem.link
+        self.title = newsItem.title
+    }
+
+    // Initialize with URL and title (for source selection)
+    init(url: String, title: String) {
+        self.url = url
+        self.title = title
+        self.newsItem = nil
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
-                WebView(url: URL(string: newsItem.link)!, isLoading: $isLoading)
+                WebView(url: URL(string: url)!, isLoading: $isLoading)
 
                 if isLoading {
                     ProgressView("Cargando artículo...")
@@ -73,7 +90,7 @@ struct ArticleReaderView: View {
                     .transition(.move(edge: .bottom))
                 }
             }
-            .navigationTitle(newsItem.title)
+            .navigationTitle(title)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -149,7 +166,7 @@ struct ArticleReaderView: View {
 
         Task {
             do {
-                let summaryText = try await generateSummary(for: newsItem)
+                let summaryText = try await generateSummary()
                 await MainActor.run {
                     self.summary = summaryText
                     withAnimation {
@@ -166,37 +183,48 @@ struct ArticleReaderView: View {
         }
     }
 
-    private func generateSummary(for newsItem: NewsItem) async throws -> String {
-        // Use simple text-based summarization
-        // In a real app with Apple Intelligence APIs, you would use the Writing Tools API
-        _ = """
-        Título: \(newsItem.title)
+    private func generateSummary() async throws -> String {
+        if let newsItem = newsItem {
+            // Use simple text-based summarization
+            // In a real app with Apple Intelligence APIs, you would use the Writing Tools API
+            _ = """
+            Título: \(newsItem.title)
 
-        Resumen: \(newsItem.summary)
+            Resumen: \(newsItem.summary)
 
-        Fuente: \(newsItem.feedName)
-        """
+            Fuente: \(newsItem.feedName)
+            """
 
-        // Simulate AI summarization (in production, use Apple Intelligence APIs)
-        return """
-        📰 \(newsItem.title)
+            // Simulate AI summarization (in production, use Apple Intelligence APIs)
+            return """
+            📰 \(newsItem.title)
 
-        Este artículo trata sobre \(newsItem.summary.prefix(200))...
+            Este artículo trata sobre \(newsItem.summary.prefix(200))...
 
-        🔍 Puntos clave:
-        • Fuente: \(newsItem.feedName)
-        • Publicado: \(newsItem.pubDate?.formatted(date: .abbreviated, time: .shortened) ?? "Fecha desconocida")
+            🔍 Puntos clave:
+            • Fuente: \(newsItem.feedName)
+            • Publicado: \(newsItem.pubDate?.formatted(date: .abbreviated, time: .shortened) ?? "Fecha desconocida")
 
-        💡 El contenido principal se centra en los temas mencionados en el resumen del artículo.
-        """
+            💡 El contenido principal se centra en los temas mencionados en el resumen del artículo.
+            """
+        } else {
+            // Simple summary when we don't have full newsItem
+            return """
+            📰 \(title)
+
+            Este artículo está disponible en la fuente original.
+
+            💡 Para obtener un resumen detallado, se necesitaría procesar el contenido del artículo.
+            """
+        }
     }
 
     private func shareArticle() {
         #if os(iOS)
-        guard let url = URL(string: newsItem.link) else { return }
+        guard let urlObj = URL(string: url) else { return }
 
         let activityVC = UIActivityViewController(
-            activityItems: [newsItem.title, url],
+            activityItems: [title, urlObj],
             applicationActivities: nil
         )
 
@@ -209,12 +237,12 @@ struct ArticleReaderView: View {
     }
 
     private func openInSafari() {
-        guard let url = URL(string: newsItem.link) else { return }
+        guard let urlObj = URL(string: url) else { return }
 
         #if os(iOS)
-        UIApplication.shared.open(url)
+        UIApplication.shared.open(urlObj)
         #elseif os(macOS)
-        NSWorkspace.shared.open(url)
+        NSWorkspace.shared.open(urlObj)
         #endif
     }
 }
