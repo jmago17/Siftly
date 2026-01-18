@@ -1,0 +1,630 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A01001AA /* RSSFilterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A0 /* RSSFilterApp.swift */; };
+		A01001AB /* RSSFilterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A0 /* RSSFilterApp.swift */; };
+		A01001AC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A1 /* ContentView.swift */; };
+		A01001AD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A1 /* ContentView.swift */; };
+		A01001AE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A01001A2 /* Assets.xcassets */; };
+		A01001AF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A01001A2 /* Assets.xcassets */; };
+		A01001B0 /* NewsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A3 /* NewsItem.swift */; };
+		A01001B1 /* NewsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A3 /* NewsItem.swift */; };
+		A01001B2 /* RSSFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A4 /* RSSFeed.swift */; };
+		A01001B3 /* RSSFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A4 /* RSSFeed.swift */; };
+		A01001B4 /* SmartFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A5 /* SmartFolder.swift */; };
+		A01001B5 /* SmartFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A5 /* SmartFolder.swift */; };
+		A01001B6 /* QualityScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A6 /* QualityScore.swift */; };
+		A01001B7 /* QualityScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A6 /* QualityScore.swift */; };
+		A01001B8 /* DuplicateGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A7 /* DuplicateGroup.swift */; };
+		A01001B9 /* DuplicateGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A7 /* DuplicateGroup.swift */; };
+		A01001BA /* AIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A8 /* AIProvider.swift */; };
+		A01001BB /* AIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A8 /* AIProvider.swift */; };
+		A01001BC /* RSSParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A9 /* RSSParser.swift */; };
+		A01001BD /* RSSParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A9 /* RSSParser.swift */; };
+		A01001BE /* AIServiceFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001C0 /* AIServiceFactory.swift */; };
+		A01001BF /* AIServiceFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001C0 /* AIServiceFactory.swift */; };
+		A01001C1 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001C2 /* AIService.swift */; };
+		A01001C3 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001C2 /* AIService.swift */; };
+		A01001C4 /* ClaudeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001C5 /* ClaudeService.swift */; };
+		A01001C6 /* ClaudeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001C5 /* ClaudeService.swift */; };
+		A01001C7 /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001C8 /* OpenAIService.swift */; };
+		A01001C9 /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001C8 /* OpenAIService.swift */; };
+		A01001CA /* AppleIntelligenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001CB /* AppleIntelligenceService.swift */; };
+		A01001CC /* AppleIntelligenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001CB /* AppleIntelligenceService.swift */; };
+		A01001CD /* NewsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001CE /* NewsViewModel.swift */; };
+		A01001CF /* NewsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001CE /* NewsViewModel.swift */; };
+		A01001D0 /* FeedsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001D1 /* FeedsViewModel.swift */; };
+		A01001D2 /* FeedsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001D1 /* FeedsViewModel.swift */; };
+		A01001D3 /* SmartFoldersViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001D4 /* SmartFoldersViewModel.swift */; };
+		A01001D5 /* SmartFoldersViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001D4 /* SmartFoldersViewModel.swift */; };
+		A01001D6 /* NewsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001D7 /* NewsListView.swift */; };
+		A01001D8 /* NewsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001D7 /* NewsListView.swift */; };
+		A01001D9 /* FeedsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001DA /* FeedsListView.swift */; };
+		A01001DB /* FeedsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001DA /* FeedsListView.swift */; };
+		A01001DC /* SmartFoldersListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001DD /* SmartFoldersListView.swift */; };
+		A01001DE /* SmartFoldersListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001DD /* SmartFoldersListView.swift */; };
+		A01001DF /* AddFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001E0 /* AddFeedView.swift */; };
+		A01001E1 /* AddFeedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001E0 /* AddFeedView.swift */; };
+		A01001E2 /* AddSmartFolderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001E3 /* AddSmartFolderView.swift */; };
+		A01001E4 /* AddSmartFolderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001E3 /* AddSmartFolderView.swift */; };
+		A01001E5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001E6 /* SettingsView.swift */; };
+		A01001E7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001E6 /* SettingsView.swift */; };
+		A01001E8 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001E9 /* SidebarView.swift */; };
+		A01001EA /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001E9 /* SidebarView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A01001A0 /* RSSFilterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RSSFilterApp.swift; sourceTree = "<group>"; };
+		A01001A1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A01001A2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A01001A3 /* NewsItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsItem.swift; sourceTree = "<group>"; };
+		A01001A4 /* RSSFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RSSFeed.swift; sourceTree = "<group>"; };
+		A01001A5 /* SmartFolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartFolder.swift; sourceTree = "<group>"; };
+		A01001A6 /* QualityScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualityScore.swift; sourceTree = "<group>"; };
+		A01001A7 /* DuplicateGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuplicateGroup.swift; sourceTree = "<group>"; };
+		A01001A8 /* AIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProvider.swift; sourceTree = "<group>"; };
+		A01001A9 /* RSSParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RSSParser.swift; sourceTree = "<group>"; };
+		A01001C0 /* AIServiceFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIServiceFactory.swift; sourceTree = "<group>"; };
+		A01001C2 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
+		A01001C5 /* ClaudeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeService.swift; sourceTree = "<group>"; };
+		A01001C8 /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
+		A01001CB /* AppleIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleIntelligenceService.swift; sourceTree = "<group>"; };
+		A01001CE /* NewsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsViewModel.swift; sourceTree = "<group>"; };
+		A01001D1 /* FeedsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedsViewModel.swift; sourceTree = "<group>"; };
+		A01001D4 /* SmartFoldersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartFoldersViewModel.swift; sourceTree = "<group>"; };
+		A01001D7 /* NewsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsListView.swift; sourceTree = "<group>"; };
+		A01001DA /* FeedsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedsListView.swift; sourceTree = "<group>"; };
+		A01001DD /* SmartFoldersListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartFoldersListView.swift; sourceTree = "<group>"; };
+		A01001E0 /* AddFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFeedView.swift; sourceTree = "<group>"; };
+		A01001E3 /* AddSmartFolderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSmartFolderView.swift; sourceTree = "<group>"; };
+		A01001E6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A01001E9 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		A0100200 /* RSSFilter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "RSSFilter.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0100201 /* RSSFilter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "RSSFilter.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A0100202 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A0100203 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A0100204 = {
+			isa = PBXGroup;
+			children = (
+				A0100205 /* Shared */,
+				A0100206 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A0100205 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				A01001A0 /* RSSFilterApp.swift */,
+				A01001A1 /* ContentView.swift */,
+				A01001A2 /* Assets.xcassets */,
+				A0100207 /* Models */,
+				A0100208 /* Services */,
+				A0100209 /* ViewModels */,
+				A010020A /* Views */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		A0100206 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A0100200 /* RSSFilter.app */,
+				A0100201 /* RSSFilter.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A0100207 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A01001A3 /* NewsItem.swift */,
+				A01001A4 /* RSSFeed.swift */,
+				A01001A5 /* SmartFolder.swift */,
+				A01001A6 /* QualityScore.swift */,
+				A01001A7 /* DuplicateGroup.swift */,
+				A01001A8 /* AIProvider.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A0100208 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A01001A9 /* RSSParser.swift */,
+				A01001C0 /* AIServiceFactory.swift */,
+				A010020B /* AIService */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A010020B /* AIService */ = {
+			isa = PBXGroup;
+			children = (
+				A01001C2 /* AIService.swift */,
+				A01001C5 /* ClaudeService.swift */,
+				A01001C8 /* OpenAIService.swift */,
+				A01001CB /* AppleIntelligenceService.swift */,
+			);
+			path = AIService;
+			sourceTree = "<group>";
+		};
+		A0100209 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				A01001CE /* NewsViewModel.swift */,
+				A01001D1 /* FeedsViewModel.swift */,
+				A01001D4 /* SmartFoldersViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		A010020A /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A01001D7 /* NewsListView.swift */,
+				A01001DA /* FeedsListView.swift */,
+				A01001DD /* SmartFoldersListView.swift */,
+				A01001E0 /* AddFeedView.swift */,
+				A01001E3 /* AddSmartFolderView.swift */,
+				A01001E6 /* SettingsView.swift */,
+				A01001E9 /* SidebarView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A010020C /* RSSFilter (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A010020D /* Build configuration list for PBXNativeTarget "RSSFilter (iOS)" */;
+			buildPhases = (
+				A010020E /* Sources */,
+				A0100202 /* Frameworks */,
+				A010020F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "RSSFilter (iOS)";
+			productName = "RSSFilter (iOS)";
+			productReference = A0100200 /* RSSFilter.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A0100210 /* RSSFilter (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A0100211 /* Build configuration list for PBXNativeTarget "RSSFilter (macOS)" */;
+			buildPhases = (
+				A0100212 /* Sources */,
+				A0100203 /* Frameworks */,
+				A0100213 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "RSSFilter (macOS)";
+			productName = "RSSFilter (macOS)";
+			productReference = A0100201 /* RSSFilter.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A0100214 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					A010020C = {
+						CreatedOnToolsVersion = 15.4;
+					};
+					A0100210 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = A0100215 /* Build configuration list for PBXProject "RSSFilter" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A0100204;
+			productRefGroup = A0100206 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A010020C /* RSSFilter (iOS) */,
+				A0100210 /* RSSFilter (macOS) */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A010020F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A01001AE /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A0100213 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A01001AF /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A010020E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A01001AA /* RSSFilterApp.swift in Sources */,
+				A01001AC /* ContentView.swift in Sources */,
+				A01001B0 /* NewsItem.swift in Sources */,
+				A01001B2 /* RSSFeed.swift in Sources */,
+				A01001B4 /* SmartFolder.swift in Sources */,
+				A01001B6 /* QualityScore.swift in Sources */,
+				A01001B8 /* DuplicateGroup.swift in Sources */,
+				A01001BA /* AIProvider.swift in Sources */,
+				A01001BC /* RSSParser.swift in Sources */,
+				A01001BE /* AIServiceFactory.swift in Sources */,
+				A01001C1 /* AIService.swift in Sources */,
+				A01001C4 /* ClaudeService.swift in Sources */,
+				A01001C7 /* OpenAIService.swift in Sources */,
+				A01001CA /* AppleIntelligenceService.swift in Sources */,
+				A01001CD /* NewsViewModel.swift in Sources */,
+				A01001D0 /* FeedsViewModel.swift in Sources */,
+				A01001D3 /* SmartFoldersViewModel.swift in Sources */,
+				A01001D6 /* NewsListView.swift in Sources */,
+				A01001D9 /* FeedsListView.swift in Sources */,
+				A01001DC /* SmartFoldersListView.swift in Sources */,
+				A01001DF /* AddFeedView.swift in Sources */,
+				A01001E2 /* AddSmartFolderView.swift in Sources */,
+				A01001E5 /* SettingsView.swift in Sources */,
+				A01001E8 /* SidebarView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A0100212 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A01001AB /* RSSFilterApp.swift in Sources */,
+				A01001AD /* ContentView.swift in Sources */,
+				A01001B1 /* NewsItem.swift in Sources */,
+				A01001B3 /* RSSFeed.swift in Sources */,
+				A01001B5 /* SmartFolder.swift in Sources */,
+				A01001B7 /* QualityScore.swift in Sources */,
+				A01001B9 /* DuplicateGroup.swift in Sources */,
+				A01001BB /* AIProvider.swift in Sources */,
+				A01001BD /* RSSParser.swift in Sources */,
+				A01001BF /* AIServiceFactory.swift in Sources */,
+				A01001C3 /* AIService.swift in Sources */,
+				A01001C6 /* ClaudeService.swift in Sources */,
+				A01001C9 /* OpenAIService.swift in Sources */,
+				A01001CC /* AppleIntelligenceService.swift in Sources */,
+				A01001CF /* NewsViewModel.swift in Sources */,
+				A01001D2 /* FeedsViewModel.swift in Sources */,
+				A01001D5 /* SmartFoldersViewModel.swift in Sources */,
+				A01001D8 /* NewsListView.swift in Sources */,
+				A01001DB /* FeedsListView.swift in Sources */,
+				A01001DE /* SmartFoldersListView.swift in Sources */,
+				A01001E1 /* AddFeedView.swift in Sources */,
+				A01001E4 /* AddSmartFolderView.swift in Sources */,
+				A01001E7 /* SettingsView.swift in Sources */,
+				A01001EA /* SidebarView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A0100216 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A0100217 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		A0100218 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rssfilter.app;
+				PRODUCT_NAME = RSSFilter;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A0100219 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rssfilter.app;
+				PRODUCT_NAME = RSSFilter;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A010021A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rssfilter.app;
+				PRODUCT_NAME = RSSFilter;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A010021B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rssfilter.app;
+				PRODUCT_NAME = RSSFilter;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A010020D /* Build configuration list for PBXNativeTarget "RSSFilter (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0100218 /* Debug */,
+				A0100219 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A0100211 /* Build configuration list for PBXNativeTarget "RSSFilter (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A010021A /* Debug */,
+				A010021B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A0100215 /* Build configuration list for PBXProject "RSSFilter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0100216 /* Debug */,
+				A0100217 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A0100214 /* Project object */;
+}
