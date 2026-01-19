@@ -66,19 +66,42 @@ class AppleIntelligenceService: AIService {
     
     func classifyIntoSmartFolders(newsItem: NewsItem, smartFolders: [SmartFolder]) async throws -> [UUID] {
         var matchingFolders: [UUID] = []
-        
+
         let content = "\(newsItem.title) \(newsItem.summary)".lowercased()
-        
+
+        // Spanish stopwords to ignore
+        let stopwords = Set(["noticias", "sobre", "de", "la", "el", "los", "las", "un", "una", "unos", "unas", "del", "al", "y", "e", "o", "u", "para", "por", "con", "sin"])
+
         for folder in smartFolders where folder.isEnabled {
-            let keywords = folder.description.lowercased().split(separator: " ")
-            let matches = keywords.filter { content.contains($0) }
-            
-            // If 50% or more keywords match, classify into this folder
-            if Double(matches.count) / Double(keywords.count) >= 0.5 {
+            // Split by comma to get keyword groups, then clean each keyword
+            let keywordGroups = folder.description.lowercased()
+                .split(separator: ",")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+
+            var folderMatches = 0
+
+            for keywordGroup in keywordGroups {
+                // Split the group into individual words and filter out stopwords
+                let words = keywordGroup.split(separator: " ")
+                    .map { String($0) }
+                    .filter { !stopwords.contains($0) && $0.count > 2 }
+
+                // Check if any significant word from this group appears in content
+                for word in words {
+                    if content.contains(word) {
+                        folderMatches += 1
+                        break // One match per keyword group is enough
+                    }
+                }
+            }
+
+            // If at least 2 keyword groups match, or 1 group if there are only 1-2 groups total
+            let threshold = keywordGroups.count <= 2 ? 1 : 2
+            if folderMatches >= threshold {
                 matchingFolders.append(folder.id)
             }
         }
-        
+
         return matchingFolders
     }
     

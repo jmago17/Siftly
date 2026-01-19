@@ -129,6 +129,12 @@ struct NewsListView: View {
                     .cornerRadius(10)
             }
         }
+        .task {
+            // Load news on first appearance if empty
+            if newsViewModel.newsItems.isEmpty && !isRefreshing {
+                await refreshNews()
+            }
+        }
     }
 
     private var filteredDeduplicatedNews: [DeduplicatedNewsItem] {
@@ -179,8 +185,7 @@ struct NewsListView: View {
 struct DeduplicatedNewsRowView: View {
     let newsItem: DeduplicatedNewsItem
     @ObservedObject var newsViewModel: NewsViewModel
-    @State private var showingReader = false
-    @State private var selectedSourceURL: String?
+    @State private var selectedSource: NewsItemSource?
     @State private var showingSourceSelector = false
 
     var body: some View {
@@ -252,23 +257,19 @@ struct DeduplicatedNewsRowView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             // Open primary source by default
-            selectedSourceURL = newsItem.primarySource.link
-            showingReader = true
+            selectedSource = newsItem.primarySource
         }
-        .sheet(isPresented: $showingReader) {
-            if let url = selectedSourceURL {
-                ArticleReaderView(url: url, title: newsItem.title)
-                    .onDisappear {
-                        // Mark as read when reader closes
-                        newsItem.primarySource.markAsRead(true)
-                    }
-            }
+        .sheet(item: $selectedSource) { source in
+            ArticleReaderView(url: source.link, title: newsItem.title)
+                .onDisappear {
+                    // Mark as read when reader closes
+                    source.markAsRead(true)
+                }
         }
         .confirmationDialog("Seleccionar fuente", isPresented: $showingSourceSelector, titleVisibility: .visible) {
             ForEach(newsItem.sources) { source in
                 Button(source.feedName) {
-                    selectedSourceURL = source.link
-                    showingReader = true
+                    selectedSource = source
                 }
             }
             Button("Cancelar", role: .cancel) { }
