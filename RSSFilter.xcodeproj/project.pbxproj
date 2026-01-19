@@ -7,9 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1613D35C9FD6BD2F6F2E5372 /* TextReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32382833D834256AAA025D3B /* TextReaderView.swift */; };
 		20AC3F370302DBBE3E1CD12D /* CloudSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCD8D732EDC433EC2A300C7 /* CloudSyncService.swift */; };
 		6E678565ECB9590AA310DCD7 /* ReadFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA244C5FEA54FFFE0E551CC /* ReadFilter.swift */; };
 		76979E08C4D8E698208DCD43 /* ReadFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA244C5FEA54FFFE0E551CC /* ReadFilter.swift */; };
+		7BDD7926984794BAB500507E /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7D863ACD63A318AD68EAFF /* SpeechService.swift */; };
 		8F800ECF44F7853B4174808D /* OPMLService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF24D8D5410B4998C899FD73 /* OPMLService.swift */; };
 		A01001AA /* RSSFilterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A0 /* RSSFilterApp.swift */; };
 		A01001AB /* RSSFilterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A0 /* RSSFilterApp.swift */; };
@@ -62,26 +64,32 @@
 		A01001E8 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001E9 /* SidebarView.swift */; };
 		A01001EA /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001E9 /* SidebarView.swift */; };
 		A1B2DC68CC94741382020308 /* ArticleReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C136692EB84F7F9E830A901 /* ArticleReaderView.swift */; };
+		A818E9D7257F10D7003048CC /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7D863ACD63A318AD68EAFF /* SpeechService.swift */; };
 		AD3CE56D6A9AEDDFEEF730B6 /* DeduplicatedNewsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A115F82C94A6A1A91C67937 /* DeduplicatedNewsItem.swift */; };
 		B203CC69850902651A9D6070 /* OPMLImportExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6798F9B3AE58E11D36AEB0B3 /* OPMLImportExportView.swift */; };
+		BD1DFAFDF70BAB1B738394E9 /* HTMLTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71123C58259217A4C160B0D1 /* HTMLTextExtractor.swift */; };
 		BD734BCB0D35CD4DFA144330 /* DeduplicatedNewsItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A115F82C94A6A1A91C67937 /* DeduplicatedNewsItem.swift */; };
 		BEA2CB28AB4CC2FFBC6641F0 /* OPMLService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF24D8D5410B4998C899FD73 /* OPMLService.swift */; };
 		C7FE48E14833441BF8C21A6B /* CloudSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBCD8D732EDC433EC2A300C7 /* CloudSyncService.swift */; };
 		CEF03463DB0D43D7698E9D7E /* ArticleReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C136692EB84F7F9E830A901 /* ArticleReaderView.swift */; };
 		CF079D5ADB6A3F48AA2C7C85 /* FavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91EF3FAC6E80563E56464E7 /* FavoritesView.swift */; };
 		D4E57FDEAE51CCF54DCD7BC1 /* FavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A91EF3FAC6E80563E56464E7 /* FavoritesView.swift */; };
+		E6251229511975335E4CFCA1 /* TextReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32382833D834256AAA025D3B /* TextReaderView.swift */; };
 		EAFFC40068BA48A801EA446F /* FeedNewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5858BED8643823B2787B69F3 /* FeedNewsView.swift */; };
 		FE3AC92FAD125A20FDF97E78 /* OPMLImportExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6798F9B3AE58E11D36AEB0B3 /* OPMLImportExportView.swift */; };
 		FEE6B37C22687FB333E27C72 /* FeedNewsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5858BED8643823B2787B69F3 /* FeedNewsView.swift */; };
+		FF057E6DDDA854093E054D91 /* HTMLTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71123C58259217A4C160B0D1 /* HTMLTextExtractor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		295E13149DB98FBB989436B4 /* RSS_RAIder.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; name = RSS_RAIder.entitlements; path = iOS/RSS_RAIder.entitlements; sourceTree = "<group>"; };
+		32382833D834256AAA025D3B /* TextReaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TextReaderView.swift; sourceTree = "<group>"; };
 		3C136692EB84F7F9E830A901 /* ArticleReaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ArticleReaderView.swift; sourceTree = "<group>"; };
 		5858BED8643823B2787B69F3 /* FeedNewsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedNewsView.swift; sourceTree = "<group>"; };
 		6798F9B3AE58E11D36AEB0B3 /* OPMLImportExportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OPMLImportExportView.swift; sourceTree = "<group>"; };
 		6A115F82C94A6A1A91C67937 /* DeduplicatedNewsItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DeduplicatedNewsItem.swift; sourceTree = "<group>"; };
 		6FA244C5FEA54FFFE0E551CC /* ReadFilter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReadFilter.swift; sourceTree = "<group>"; };
+		71123C58259217A4C160B0D1 /* HTMLTextExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HTMLTextExtractor.swift; sourceTree = "<group>"; };
 		A01001A0 /* RSSFilterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RSSFilterApp.swift; sourceTree = "<group>"; };
 		A01001A1 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A01001A2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -110,6 +118,7 @@
 		A0100200 /* RSSFilter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RSSFilter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0100201 /* RSSFilter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RSSFilter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A91EF3FAC6E80563E56464E7 /* FavoritesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FavoritesView.swift; sourceTree = "<group>"; };
+		EA7D863ACD63A318AD68EAFF /* SpeechService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
 		EC2D10C6CD1F3F0B081C8FCA /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = Info.plist; path = iOS/Info.plist; sourceTree = "<group>"; };
 		FBCD8D732EDC433EC2A300C7 /* CloudSyncService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudSyncService.swift; sourceTree = "<group>"; };
 		FF24D8D5410B4998C899FD73 /* OPMLService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OPMLService.swift; sourceTree = "<group>"; };
@@ -188,6 +197,8 @@
 				A010020B /* AIService */,
 				FBCD8D732EDC433EC2A300C7 /* CloudSyncService.swift */,
 				FF24D8D5410B4998C899FD73 /* OPMLService.swift */,
+				71123C58259217A4C160B0D1 /* HTMLTextExtractor.swift */,
+				EA7D863ACD63A318AD68EAFF /* SpeechService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -216,6 +227,7 @@
 				6798F9B3AE58E11D36AEB0B3 /* OPMLImportExportView.swift */,
 				5858BED8643823B2787B69F3 /* FeedNewsView.swift */,
 				A91EF3FAC6E80563E56464E7 /* FavoritesView.swift */,
+				32382833D834256AAA025D3B /* TextReaderView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -370,6 +382,9 @@
 				76979E08C4D8E698208DCD43 /* ReadFilter.swift in Sources */,
 				AD3CE56D6A9AEDDFEEF730B6 /* DeduplicatedNewsItem.swift in Sources */,
 				D4E57FDEAE51CCF54DCD7BC1 /* FavoritesView.swift in Sources */,
+				BD1DFAFDF70BAB1B738394E9 /* HTMLTextExtractor.swift in Sources */,
+				7BDD7926984794BAB500507E /* SpeechService.swift in Sources */,
+				E6251229511975335E4CFCA1 /* TextReaderView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -409,6 +424,9 @@
 				6E678565ECB9590AA310DCD7 /* ReadFilter.swift in Sources */,
 				BD734BCB0D35CD4DFA144330 /* DeduplicatedNewsItem.swift in Sources */,
 				CF079D5ADB6A3F48AA2C7C85 /* FavoritesView.swift in Sources */,
+				FF057E6DDDA854093E054D91 /* HTMLTextExtractor.swift in Sources */,
+				A818E9D7257F10D7003048CC /* SpeechService.swift in Sources */,
+				1613D35C9FD6BD2F6F2E5372 /* TextReaderView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -536,7 +554,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = iOS/RSS_RAIder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = ES2766ARHJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -551,7 +569,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rssraider.app;
 				PRODUCT_NAME = "RSS RAIder";
 				SDKROOT = iphoneos;
@@ -572,7 +590,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = iOS/RSS_RAIder.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = ES2766ARHJ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -587,7 +605,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rssraider.app;
 				PRODUCT_NAME = "RSS RAIder";
 				SDKROOT = iphoneos;
@@ -610,7 +628,7 @@
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -622,7 +640,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rssraider.app;
 				PRODUCT_NAME = "RSS RAIder";
 				SDKROOT = macosx;
@@ -639,7 +657,7 @@
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -651,7 +669,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 1.0.3;
+				MARKETING_VERSION = 1.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rssraider.app;
 				PRODUCT_NAME = "RSS RAIder";
 				SDKROOT = macosx;

@@ -25,6 +25,7 @@ struct ArticleReaderView: View {
     @State private var summary: String?
     @State private var showingSummary = false
     @State private var errorMessage: String?
+    @State private var showingTextReader = false
 
     // Initialize with NewsItem (legacy)
     init(newsItem: NewsItem) {
@@ -105,6 +106,21 @@ struct ArticleReaderView: View {
                 // Bottom toolbar
                 #if os(iOS)
                 HStack(spacing: 0) {
+                    Button {
+                        showingTextReader = true
+                    } label: {
+                        VStack(spacing: 4) {
+                            Image(systemName: "book.pages")
+                                .font(.title3)
+                            Text("Leer")
+                                .font(.caption2)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+
+                    Divider()
+                        .frame(height: 40)
+
                     Button {
                         openInSafari()
                     } label: {
@@ -194,6 +210,9 @@ struct ArticleReaderView: View {
                 if let error = errorMessage {
                     Text(error)
                 }
+            }
+            .sheet(isPresented: $showingTextReader) {
+                TextReaderView(url: url, title: title)
             }
         }
     }
