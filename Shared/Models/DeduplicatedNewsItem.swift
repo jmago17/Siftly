@@ -88,12 +88,20 @@ struct NewsItemSource: Identifiable {
 
     /// Read status for this specific source
     var isRead: Bool {
-        UserDefaults.standard.bool(forKey: "read_\(id)")
+        // Try iCloud first, then fall back to local UserDefaults
+        if let cloudState = CloudSyncService.shared.getReadState(id) {
+            return cloudState
+        }
+        return UserDefaults.standard.bool(forKey: "read_\(id)")
     }
 
     /// Favorite status for this specific source
     var isFavorite: Bool {
-        UserDefaults.standard.bool(forKey: "favorite_\(id)")
+        // Try iCloud first, then fall back to local UserDefaults
+        if let cloudState = CloudSyncService.shared.getFavoriteState(id) {
+            return cloudState
+        }
+        return UserDefaults.standard.bool(forKey: "favorite_\(id)")
     }
 
     init(from newsItem: NewsItem) {
@@ -107,5 +115,6 @@ struct NewsItemSource: Identifiable {
     /// Mark this source as read
     func markAsRead(_ isRead: Bool) {
         UserDefaults.standard.set(isRead, forKey: "read_\(id)")
+        CloudSyncService.shared.saveReadState(id, isRead: isRead)
     }
 }

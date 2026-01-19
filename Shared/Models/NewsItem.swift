@@ -22,19 +22,29 @@ struct NewsItem: Codable, Identifiable {
     // User interactions
     var isRead: Bool {
         get {
-            UserDefaults.standard.bool(forKey: "read_\(id)")
+            // Try iCloud first, then fall back to local UserDefaults
+            if let cloudState = CloudSyncService.shared.getReadState(id) {
+                return cloudState
+            }
+            return UserDefaults.standard.bool(forKey: "read_\(id)")
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "read_\(id)")
+            CloudSyncService.shared.saveReadState(id, isRead: newValue)
         }
     }
-    
+
     var isFavorite: Bool {
         get {
-            UserDefaults.standard.bool(forKey: "favorite_\(id)")
+            // Try iCloud first, then fall back to local UserDefaults
+            if let cloudState = CloudSyncService.shared.getFavoriteState(id) {
+                return cloudState
+            }
+            return UserDefaults.standard.bool(forKey: "favorite_\(id)")
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "favorite_\(id)")
+            CloudSyncService.shared.saveFavoriteState(id, isFavorite: newValue)
         }
     }
 }

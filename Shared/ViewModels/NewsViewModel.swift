@@ -13,8 +13,10 @@ class NewsViewModel: ObservableObject {
     @Published var selectedProvider: AIProvider = .appleIntelligence
     @Published var claudeAPIKey = ""
     @Published var openAIAPIKey = ""
-    
+    @Published var iCloudSyncEnabled = true
+
     private var aiService: AIService?
+    private let cloudSync = CloudSyncService.shared
     private let userDefaultsProviderKey = "selectedAIProvider"
     private let userDefaultsClaudeKey = "claudeAPIKey"
     private let userDefaultsOpenAIKey = "openAIAPIKey"
@@ -179,7 +181,13 @@ class NewsViewModel: ObservableObject {
     // MARK: - Read Status Management
 
     func markAsRead(_ itemID: String, isRead: Bool) {
+        // Save to local UserDefaults
         UserDefaults.standard.set(isRead, forKey: "read_\(itemID)")
+
+        // Sync to iCloud if enabled
+        if iCloudSyncEnabled {
+            cloudSync.saveReadState(itemID, isRead: isRead)
+        }
     }
 
     func markAllAsRead(withScoreBelow threshold: Int) {
@@ -194,7 +202,13 @@ class NewsViewModel: ObservableObject {
     // MARK: - Favorite Management
 
     func markAsFavorite(_ itemID: String, isFavorite: Bool) {
+        // Save to local UserDefaults
         UserDefaults.standard.set(isFavorite, forKey: "favorite_\(itemID)")
+
+        // Sync to iCloud if enabled
+        if iCloudSyncEnabled {
+            cloudSync.saveFavoriteState(itemID, isFavorite: isFavorite)
+        }
     }
     
     // MARK: - Settings

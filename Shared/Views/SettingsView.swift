@@ -118,6 +118,7 @@ struct SettingsView: View {
                     .onChange(of: iCloudSyncEnabled) { _, newValue in
                         feedsViewModel.iCloudSyncEnabled = newValue
                         smartFoldersViewModel.iCloudSyncEnabled = newValue
+                        newsViewModel.iCloudSyncEnabled = newValue
 
                         if newValue {
                             feedsViewModel.syncFromCloud()

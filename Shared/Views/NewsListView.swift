@@ -17,7 +17,7 @@ struct NewsListView: View {
     @State private var selectedFeedID: UUID?
     @State private var selectedSmartFolderID: UUID?
     @State private var isRefreshing = false
-    @State private var readFilter: ReadFilter = .all
+    @State private var readFilter: ReadFilter = .unread
     @State private var minScoreFilter: Int = 0
     @State private var showingFilters = false
     @State private var showingBulkActions = false

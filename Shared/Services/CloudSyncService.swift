@@ -13,6 +13,8 @@ class CloudSyncService: ObservableObject {
     private let store = NSUbiquitousKeyValueStore.default
     private let feedsKey = "icloud_rssFeeds"
     private let smartFoldersKey = "icloud_smartFolders"
+    private let readStatesKey = "icloud_readStates"
+    private let favoriteStatesKey = "icloud_favoriteStates"
 
     @Published var isSyncing = false
     @Published var lastSyncDate: Date?
@@ -75,6 +77,66 @@ class CloudSyncService: ObservableObject {
         }
 
         return try? JSONDecoder().decode([SmartFolder].self, from: data)
+    }
+
+    /// Save read states to iCloud
+    func saveReadState(_ itemID: String, isRead: Bool) {
+        var readStates = loadAllReadStates()
+        readStates[itemID] = isRead
+
+        guard let data = try? JSONEncoder().encode(readStates) else {
+            syncError = "Error encoding read states"
+            return
+        }
+
+        store.set(data, forKey: readStatesKey)
+        store.synchronize()
+        lastSyncDate = Date()
+    }
+
+    /// Load all read states from iCloud
+    func loadAllReadStates() -> [String: Bool] {
+        guard let data = store.data(forKey: readStatesKey) else {
+            return [:]
+        }
+
+        return (try? JSONDecoder().decode([String: Bool].self, from: data)) ?? [:]
+    }
+
+    /// Get read state for specific item
+    func getReadState(_ itemID: String) -> Bool? {
+        let states = loadAllReadStates()
+        return states[itemID]
+    }
+
+    /// Save favorite states to iCloud
+    func saveFavoriteState(_ itemID: String, isFavorite: Bool) {
+        var favoriteStates = loadAllFavoriteStates()
+        favoriteStates[itemID] = isFavorite
+
+        guard let data = try? JSONEncoder().encode(favoriteStates) else {
+            syncError = "Error encoding favorite states"
+            return
+        }
+
+        store.set(data, forKey: favoriteStatesKey)
+        store.synchronize()
+        lastSyncDate = Date()
+    }
+
+    /// Load all favorite states from iCloud
+    func loadAllFavoriteStates() -> [String: Bool] {
+        guard let data = store.data(forKey: favoriteStatesKey) else {
+            return [:]
+        }
+
+        return (try? JSONDecoder().decode([String: Bool].self, from: data)) ?? [:]
+    }
+
+    /// Get favorite state for specific item
+    func getFavoriteState(_ itemID: String) -> Bool? {
+        let states = loadAllFavoriteStates()
+        return states[itemID]
     }
 
     /// Manually trigger sync
