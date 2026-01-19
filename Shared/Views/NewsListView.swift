@@ -208,6 +208,8 @@ struct NewsListView: View {
         for source in item.sources {
             newsViewModel.markAsRead(source.id, isRead: newReadStatus)
         }
+        // Trigger refresh
+        newsViewModel.objectWillChange.send()
     }
 
     private func toggleFavorite(_ item: DeduplicatedNewsItem) {
@@ -216,6 +218,8 @@ struct NewsListView: View {
         for source in item.sources {
             newsViewModel.markAsFavorite(source.id, isFavorite: newFavoriteStatus)
         }
+        // Trigger refresh
+        newsViewModel.objectWillChange.send()
     }
 }
 
@@ -224,6 +228,7 @@ struct DeduplicatedNewsRowView: View {
     @ObservedObject var newsViewModel: NewsViewModel
     @State private var selectedSource: NewsItemSource?
     @State private var showingSourceSelector = false
+    @State private var refreshID = UUID()
 
     private var openInAppBrowser: Bool {
         UserDefaults.standard.bool(forKey: "openInAppBrowser")
@@ -312,7 +317,13 @@ struct DeduplicatedNewsRowView: View {
                 .onDisappear {
                     // Mark as read when reader closes
                     source.markAsRead(true)
+                    newsViewModel.objectWillChange.send()
                 }
+            #if os(iOS)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+                .interactiveDismissDisabled(false)
+            #endif
         }
         .confirmationDialog("Seleccionar fuente", isPresented: $showingSourceSelector, titleVisibility: .visible) {
             ForEach(newsItem.sources) { source in

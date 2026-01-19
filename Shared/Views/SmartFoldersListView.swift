@@ -140,6 +140,10 @@ struct SmartFolderDetailView: View {
         }
         .sheet(item: $selectedNewsItem) { item in
             ArticleReaderView(newsItem: item)
+            #if os(iOS)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+            #endif
         }
     }
 }

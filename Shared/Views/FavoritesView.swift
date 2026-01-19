@@ -132,6 +132,8 @@ struct FavoritesView: View {
         for source in item.sources {
             newsViewModel.markAsRead(source.id, isRead: newReadStatus)
         }
+        // Trigger refresh
+        newsViewModel.objectWillChange.send()
     }
 
     private func toggleFavorite(_ item: DeduplicatedNewsItem) {
@@ -139,6 +141,8 @@ struct FavoritesView: View {
         for source in item.sources {
             newsViewModel.markAsFavorite(source.id, isFavorite: newFavoriteStatus)
         }
+        // Trigger refresh
+        newsViewModel.objectWillChange.send()
     }
 }
 

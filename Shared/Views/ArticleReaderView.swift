@@ -18,6 +18,7 @@ struct ArticleReaderView: View {
     let newsItem: NewsItem?
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @State private var isLoading = true
     @State private var isSummarizing = false
@@ -37,6 +38,14 @@ struct ArticleReaderView: View {
         self.url = url
         self.title = title
         self.newsItem = nil
+    }
+
+    private var isIPad: Bool {
+        #if os(iOS)
+        return UIDevice.current.userInterfaceIdiom == .pad
+        #else
+        return false
+        #endif
     }
 
     var body: some View {
@@ -227,34 +236,31 @@ struct ArticleReaderView: View {
         if let newsItem = newsItem {
             // Use simple text-based summarization
             // In a real app with Apple Intelligence APIs, you would use the Writing Tools API
-            _ = """
-            Título: \(newsItem.title)
+            let summary = newsItem.summary.isEmpty ? "El artículo no tiene resumen disponible." : String(newsItem.summary.prefix(300))
 
-            Resumen: \(newsItem.summary)
-
-            Fuente: \(newsItem.feedName)
-            """
-
-            // Simulate AI summarization (in production, use Apple Intelligence APIs)
             return """
             📰 \(newsItem.title)
 
-            Este artículo trata sobre \(newsItem.summary.prefix(200))...
+            \(summary)
 
             🔍 Puntos clave:
             • Fuente: \(newsItem.feedName)
             • Publicado: \(newsItem.pubDate?.formatted(date: .abbreviated, time: .shortened) ?? "Fecha desconocida")
+            \(newsItem.qualityScore != nil ? "• Puntuación: \(newsItem.qualityScore!.overallScore)/100" : "")
 
-            💡 El contenido principal se centra en los temas mencionados en el resumen del artículo.
+            💡 Este es un resumen generado automáticamente. Para más detalles, lee el artículo completo.
             """
         } else {
-            // Simple summary when we don't have full newsItem
+            // Extract summary from title
             return """
             📰 \(title)
 
-            Este artículo está disponible en la fuente original.
+            🔍 Resumen rápido:
+            Artículo disponible para lectura completa en la fuente original.
 
-            💡 Para obtener un resumen detallado, se necesitaría procesar el contenido del artículo.
+            💡 Sugerencia: Lee el artículo completo en el navegador para obtener toda la información y contexto.
+
+            ℹ️ El resumen detallado está disponible cuando abres artículos directamente desde la lista de noticias.
             """
         }
     }
