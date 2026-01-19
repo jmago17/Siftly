@@ -25,6 +25,11 @@ class SmartFoldersViewModel: ObservableObject {
         }
 
         setupCloudSync()
+
+        // Sync from iCloud on first launch
+        Task { @MainActor in
+            syncFromCloud()
+        }
     }
 
     private func setupCloudSync() {

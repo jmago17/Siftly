@@ -24,6 +24,35 @@ class NewsViewModel: ObservableObject {
     init() {
         loadSettings()
         updateAIService()
+
+        // Sync states from iCloud on first launch
+        Task { @MainActor in
+            syncStatesFromCloud()
+        }
+    }
+
+    // MARK: - iCloud Sync
+
+    private func syncStatesFromCloud() {
+        guard iCloudSyncEnabled else { return }
+
+        // Load read states from iCloud and merge with local
+        let cloudReadStates = cloudSync.loadAllReadStates()
+        for (itemID, isRead) in cloudReadStates {
+            // Only update if not already set locally
+            if !UserDefaults.standard.bool(forKey: "read_\(itemID)") {
+                UserDefaults.standard.set(isRead, forKey: "read_\(itemID)")
+            }
+        }
+
+        // Load favorite states from iCloud and merge with local
+        let cloudFavoriteStates = cloudSync.loadAllFavoriteStates()
+        for (itemID, isFavorite) in cloudFavoriteStates {
+            // Only update if not already set locally
+            if !UserDefaults.standard.bool(forKey: "favorite_\(itemID)") {
+                UserDefaults.standard.set(isFavorite, forKey: "favorite_\(itemID)")
+            }
+        }
     }
     
     // MARK: - AI Processing
