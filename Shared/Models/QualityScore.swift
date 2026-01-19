@@ -1,6 +1,6 @@
 //
 //  QualityScore.swift
-//  RSSFilter
+//  RSS RAIder
 //
 
 import Foundation

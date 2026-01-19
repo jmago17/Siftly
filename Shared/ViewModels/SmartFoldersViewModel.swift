@@ -1,6 +1,6 @@
 //
 //  SmartFoldersViewModel.swift
-//  RSSFilter
+//  RSS RAIder
 //
 
 import Foundation

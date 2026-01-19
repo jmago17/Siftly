@@ -1,6 +1,6 @@
 //
 //  AppleIntelligenceService.swift
-//  RSSFilter
+//  RSS RAIder
 //
 
 import Foundation

@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  RSSFilter
+//  RSS RAIder
 //
 
 import SwiftUI

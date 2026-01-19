@@ -1,6 +1,6 @@
 //
 //  FeedNewsView.swift
-//  RSSFilter
+//  RSS RAIder
 //
 
 import SwiftUI

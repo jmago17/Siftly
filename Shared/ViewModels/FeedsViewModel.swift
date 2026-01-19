@@ -1,6 +1,6 @@
 //
 //  FeedsViewModel.swift
-//  RSSFilter
+//  RSS RAIder
 //
 
 import Foundation

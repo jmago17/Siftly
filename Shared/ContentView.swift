@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  RSSFilter
+//  RSS RAIder
 //
 
 import SwiftUI

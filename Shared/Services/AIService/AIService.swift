@@ -1,6 +1,6 @@
 //
 //  AIService.swift
-//  RSSFilter
+//  RSS RAIder
 //
 
 import Foundation
