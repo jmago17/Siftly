@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var showingManageFolders = false
     @State private var showingOPML = false
     @State private var iCloudSyncEnabled = true
+    @State private var openInAppBrowser = UserDefaults.standard.bool(forKey: "openInAppBrowser")
 
     init(newsViewModel: NewsViewModel, smartFoldersViewModel: SmartFoldersViewModel, feedsViewModel: FeedsViewModel) {
         self.newsViewModel = newsViewModel
@@ -93,6 +94,20 @@ struct SettingsView: View {
                     } footer: {
                         Text("Tu API key se almacena de forma segura en el dispositivo")
                     }
+                }
+
+                // Reading Preferences
+                Section {
+                    Toggle(isOn: $openInAppBrowser) {
+                        Label("Abrir en navegador interno", systemImage: "doc.text.magnifyingglass")
+                    }
+                    .onChange(of: openInAppBrowser) { _, newValue in
+                        UserDefaults.standard.set(newValue, forKey: "openInAppBrowser")
+                    }
+                } header: {
+                    Text("Lectura")
+                } footer: {
+                    Text("Cuando está activado, los artículos se abren en el navegador interno de la app. Cuando está desactivado, se abren en Safari o tu navegador predeterminado.")
                 }
 
                 // iCloud Sync

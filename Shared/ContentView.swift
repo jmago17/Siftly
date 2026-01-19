@@ -27,6 +27,16 @@ struct ContentView: View {
             .tag(0)
 
             NavigationStack {
+                FavoritesView(
+                    newsViewModel: newsViewModel
+                )
+            }
+            .tabItem {
+                Label("Favoritos", systemImage: "star.fill")
+            }
+            .tag(1)
+
+            NavigationStack {
                 FeedsListView(
                     feedsViewModel: feedsViewModel,
                     newsViewModel: newsViewModel
@@ -35,7 +45,7 @@ struct ContentView: View {
             .tabItem {
                 Label("Feeds", systemImage: "antenna.radiowaves.left.and.right")
             }
-            .tag(1)
+            .tag(2)
 
             NavigationStack {
                 SmartFoldersListView(
@@ -46,7 +56,7 @@ struct ContentView: View {
             .tabItem {
                 Label("Carpetas", systemImage: "folder")
             }
-            .tag(2)
+            .tag(3)
 
             SettingsView(
                 newsViewModel: newsViewModel,
@@ -56,7 +66,7 @@ struct ContentView: View {
             .tabItem {
                 Label("Ajustes", systemImage: "gear")
             }
-            .tag(3)
+            .tag(4)
         }
         #elseif os(macOS)
         NavigationSplitView {

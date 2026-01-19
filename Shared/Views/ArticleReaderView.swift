@@ -41,54 +41,111 @@ struct ArticleReaderView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                WebView(url: URL(string: url)!, isLoading: $isLoading)
+            VStack(spacing: 0) {
+                ZStack {
+                    WebView(url: URL(string: url)!, isLoading: $isLoading)
 
-                if isLoading {
-                    ProgressView("Cargando artículo...")
-                        .padding()
-                        .background(.regularMaterial)
-                        .cornerRadius(10)
-                }
-
-                if showingSummary, let summary = summary {
-                    VStack {
-                        Spacer()
-
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "sparkles")
-                                    .foregroundColor(.blue)
-                                Text("Resumen con Apple Intelligence")
-                                    .font(.headline)
-
-                                Spacer()
-
-                                Button {
-                                    withAnimation {
-                                        showingSummary = false
-                                    }
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-
-                            ScrollView {
-                                Text(summary)
-                                    .font(.body)
-                                    .textSelection(.enabled)
-                            }
-                            .frame(maxHeight: 300)
-                        }
-                        .padding()
-                        .background(.regularMaterial)
-                        .cornerRadius(12)
-                        .shadow(radius: 10)
-                        .padding()
+                    if isLoading {
+                        ProgressView("Cargando artículo...")
+                            .padding()
+                            .background(.regularMaterial)
+                            .cornerRadius(10)
                     }
-                    .transition(.move(edge: .bottom))
+
+                    if showingSummary, let summary = summary {
+                        VStack {
+                            Spacer()
+
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "sparkles")
+                                        .foregroundColor(.blue)
+                                    Text("Resumen con Apple Intelligence")
+                                        .font(.headline)
+
+                                    Spacer()
+
+                                    Button {
+                                        withAnimation {
+                                            showingSummary = false
+                                        }
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+
+                                ScrollView {
+                                    Text(summary)
+                                        .font(.body)
+                                        .textSelection(.enabled)
+                                }
+                                .frame(maxHeight: 300)
+                            }
+                            .padding()
+                            .background(.regularMaterial)
+                            .cornerRadius(12)
+                            .shadow(radius: 10)
+                            .padding()
+                            .padding(.bottom, 60) // Make room for bottom toolbar
+                        }
+                        .transition(.move(edge: .bottom))
+                    }
                 }
+
+                // Bottom toolbar
+                #if os(iOS)
+                HStack(spacing: 0) {
+                    Button {
+                        openInSafari()
+                    } label: {
+                        VStack(spacing: 4) {
+                            Image(systemName: "safari")
+                                .font(.title3)
+                            Text("Safari")
+                                .font(.caption2)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+
+                    Divider()
+                        .frame(height: 40)
+
+                    Button {
+                        shareArticle()
+                    } label: {
+                        VStack(spacing: 4) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.title3)
+                            Text("Compartir")
+                                .font(.caption2)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+
+                    Divider()
+                        .frame(height: 40)
+
+                    Button {
+                        summarizeArticle()
+                    } label: {
+                        VStack(spacing: 4) {
+                            if isSummarizing {
+                                ProgressView()
+                            } else {
+                                Image(systemName: "sparkles")
+                                    .font(.title3)
+                            }
+                            Text("Resumir")
+                                .font(.caption2)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .disabled(isSummarizing)
+                }
+                .padding(.vertical, 8)
+                .background(.regularMaterial)
+                #endif
             }
             .navigationTitle(title)
             #if os(iOS)
@@ -101,39 +158,22 @@ struct ArticleReaderView: View {
                     }
                 }
 
-                #if os(iOS)
+                #if os(macOS)
                 ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        Button {
-                            summarizeArticle()
-                        } label: {
-                            Label("Resumir con AI", systemImage: "sparkles")
-                        }
-                        .disabled(isSummarizing)
-
-                        Button {
-                            shareArticle()
-                        } label: {
-                            Label("Compartir", systemImage: "square.and.arrow.up")
-                        }
-
+                    HStack {
                         Button {
                             openInSafari()
                         } label: {
                             Label("Abrir en Safari", systemImage: "safari")
                         }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
+
+                        Button {
+                            summarizeArticle()
+                        } label: {
+                            Label("Resumir", systemImage: "sparkles")
+                        }
+                        .disabled(isSummarizing)
                     }
-                }
-                #else
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        summarizeArticle()
-                    } label: {
-                        Label("Resumir", systemImage: "sparkles")
-                    }
-                    .disabled(isSummarizing)
                 }
                 #endif
             }
@@ -270,12 +310,14 @@ struct WebViewRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
         webView.navigationDelegate = context.coordinator
+        let request = URLRequest(url: url)
+        webView.load(request)
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        let request = URLRequest(url: url)
-        webView.load(request)
+        // Don't reload on every update - only load in makeUIView
+        // This prevents constant reloading
     }
 
     func makeCoordinator() -> Coordinator {
@@ -310,12 +352,14 @@ struct WebViewRepresentable: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let webView = WKWebView()
         webView.navigationDelegate = context.coordinator
+        let request = URLRequest(url: url)
+        webView.load(request)
         return webView
     }
 
     func updateNSView(_ webView: WKWebView, context: Context) {
-        let request = URLRequest(url: url)
-        webView.load(request)
+        // Don't reload on every update - only load in makeNSView
+        // This prevents constant reloading
     }
 
     func makeCoordinator() -> Coordinator {

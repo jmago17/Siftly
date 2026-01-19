@@ -4,6 +4,11 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 struct NewsListView: View {
     @ObservedObject var newsViewModel: NewsViewModel
@@ -63,6 +68,22 @@ struct NewsListView: View {
                     List {
                         ForEach(filteredDeduplicatedNews) { item in
                             DeduplicatedNewsRowView(newsItem: item, newsViewModel: newsViewModel)
+                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                    Button {
+                                        toggleFavorite(item)
+                                    } label: {
+                                        Label(item.isFavorite ? "Quitar favorito" : "Favorito", systemImage: item.isFavorite ? "star.slash.fill" : "star.fill")
+                                    }
+                                    .tint(.yellow)
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button {
+                                        toggleRead(item)
+                                    } label: {
+                                        Label(item.isRead ? "No leído" : "Leído", systemImage: item.isRead ? "envelope.open.fill" : "envelope.fill")
+                                    }
+                                    .tint(item.isRead ? .orange : .blue)
+                                }
                         }
                     }
                     .refreshable {
@@ -180,6 +201,22 @@ struct NewsListView: View {
 
         isRefreshing = false
     }
+
+    private func toggleRead(_ item: DeduplicatedNewsItem) {
+        let newReadStatus = !item.isRead
+        // Mark all sources as read/unread
+        for source in item.sources {
+            newsViewModel.markAsRead(source.id, isRead: newReadStatus)
+        }
+    }
+
+    private func toggleFavorite(_ item: DeduplicatedNewsItem) {
+        let newFavoriteStatus = !item.isFavorite
+        // Mark all sources as favorite/unfavorite
+        for source in item.sources {
+            newsViewModel.markAsFavorite(source.id, isFavorite: newFavoriteStatus)
+        }
+    }
 }
 
 struct DeduplicatedNewsRowView: View {
@@ -187,6 +224,10 @@ struct DeduplicatedNewsRowView: View {
     @ObservedObject var newsViewModel: NewsViewModel
     @State private var selectedSource: NewsItemSource?
     @State private var showingSourceSelector = false
+
+    private var openInAppBrowser: Bool {
+        UserDefaults.standard.bool(forKey: "openInAppBrowser")
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -256,8 +297,15 @@ struct DeduplicatedNewsRowView: View {
         .padding(.vertical, 4)
         .contentShape(Rectangle())
         .onTapGesture {
-            // Open primary source by default
-            selectedSource = newsItem.primarySource
+            if openInAppBrowser {
+                // Open in-app browser
+                selectedSource = newsItem.primarySource
+            } else {
+                // Open in default browser
+                openInDefaultBrowser(newsItem.primarySource.link)
+                // Mark as read
+                newsItem.primarySource.markAsRead(true)
+            }
         }
         .sheet(item: $selectedSource) { source in
             ArticleReaderView(url: source.link, title: newsItem.title)
@@ -269,13 +317,28 @@ struct DeduplicatedNewsRowView: View {
         .confirmationDialog("Seleccionar fuente", isPresented: $showingSourceSelector, titleVisibility: .visible) {
             ForEach(newsItem.sources) { source in
                 Button(source.feedName) {
-                    selectedSource = source
+                    if openInAppBrowser {
+                        selectedSource = source
+                    } else {
+                        openInDefaultBrowser(source.link)
+                        source.markAsRead(true)
+                    }
                 }
             }
             Button("Cancelar", role: .cancel) { }
         } message: {
             Text("Elige la fuente que quieres leer")
         }
+    }
+
+    private func openInDefaultBrowser(_ urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+
+        #if os(iOS)
+        UIApplication.shared.open(url)
+        #elseif os(macOS)
+        NSWorkspace.shared.open(url)
+        #endif
     }
 }
 

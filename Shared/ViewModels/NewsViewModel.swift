@@ -80,7 +80,7 @@ class NewsViewModel: ObservableObject {
     
     // MARK: - Filtering
 
-    func getNewsItems(for feedID: UUID? = nil, smartFolderID: UUID? = nil) -> [NewsItem] {
+    func getNewsItems(for feedID: UUID? = nil, smartFolderID: UUID? = nil, favoritesOnly: Bool = false) -> [NewsItem] {
         var filtered = newsItems
 
         if let feedID = feedID {
@@ -89,6 +89,12 @@ class NewsViewModel: ObservableObject {
 
         if let smartFolderID = smartFolderID {
             filtered = filtered.filter { $0.smartFolderIDs.contains(smartFolderID) }
+        }
+
+        if favoritesOnly {
+            filtered = filtered.filter { item in
+                UserDefaults.standard.bool(forKey: "favorite_\(item.id)")
+            }
         }
 
         // Sort by quality score (high to low), then by date
@@ -105,8 +111,8 @@ class NewsViewModel: ObservableObject {
     }
 
     /// Get deduplicated news items (show duplicates only once with multiple sources)
-    func getDeduplicatedNewsItems(for feedID: UUID? = nil, smartFolderID: UUID? = nil) -> [DeduplicatedNewsItem] {
-        let items = getNewsItems(for: feedID, smartFolderID: smartFolderID)
+    func getDeduplicatedNewsItems(for feedID: UUID? = nil, smartFolderID: UUID? = nil, favoritesOnly: Bool = false) -> [DeduplicatedNewsItem] {
+        let items = getNewsItems(for: feedID, smartFolderID: smartFolderID, favoritesOnly: favoritesOnly)
 
         // Group items by duplicate group ID
         var grouped: [UUID?: [NewsItem]] = [:]
@@ -173,18 +179,22 @@ class NewsViewModel: ObservableObject {
     // MARK: - Read Status Management
 
     func markAsRead(_ itemID: String, isRead: Bool) {
-        if let index = newsItems.firstIndex(where: { $0.id == itemID }) {
-            newsItems[index].isRead = isRead
-        }
+        UserDefaults.standard.set(isRead, forKey: "read_\(itemID)")
     }
 
     func markAllAsRead(withScoreBelow threshold: Int) {
-        for index in newsItems.indices {
-            if let score = newsItems[index].qualityScore?.overallScore,
+        for item in newsItems {
+            if let score = item.qualityScore?.overallScore,
                score < threshold {
-                newsItems[index].isRead = true
+                markAsRead(item.id, isRead: true)
             }
         }
+    }
+
+    // MARK: - Favorite Management
+
+    func markAsFavorite(_ itemID: String, isFavorite: Bool) {
+        UserDefaults.standard.set(isFavorite, forKey: "favorite_\(itemID)")
     }
     
     // MARK: - Settings
