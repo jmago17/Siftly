@@ -8,30 +8,43 @@ import SwiftUI
 struct SidebarView: View {
     @ObservedObject var feedsViewModel: FeedsViewModel
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
+    @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
     @ObservedObject var newsViewModel: NewsViewModel
     @State private var showingAddFeed = false
-    @State private var showingAddFolder = false
+    @State private var showingAddFeedFolder = false
+    @State private var showingAddSmartFolder = false
     @State private var showingSettings = false
 
     var body: some View {
         List {
-            // All News Section
-            Section("Todas las noticias") {
-                NavigationLink {
-                    Text("All news will be displayed here")
-                } label: {
-                    Label("Todas", systemImage: "newspaper")
-                }
-            }
-
             // RSS Feeds Section
             Section {
-                ForEach(feedsViewModel.feeds) { feed in
-                    FeedRowView(feed: feed, feedsViewModel: feedsViewModel)
-                }
-                .onDelete { indexSet in
-                    indexSet.forEach { index in
-                        feedsViewModel.deleteFeed(id: feedsViewModel.feeds[index].id)
+                ForEach(feedFolderSections) { section in
+                    DisclosureGroup(isExpanded: .constant(true)) {
+                        if section.feeds.isEmpty {
+                            Text("Sin feeds")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } else {
+                            ForEach(section.feeds) { feed in
+                                FeedRowView(feed: feed)
+                            }
+                            .onDelete { indexSet in
+                                indexSet.forEach { index in
+                                    feedsViewModel.deleteFeed(id: section.feeds[index].id)
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text(section.title)
+                            Spacer()
+                            if section.count > 0 {
+                                Text("\(section.count)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
                 }
 
@@ -39,6 +52,12 @@ struct SidebarView: View {
                     showingAddFeed = true
                 } label: {
                     Label("Añadir Feed", systemImage: "plus.circle")
+                }
+
+                Button {
+                    showingAddFeedFolder = true
+                } label: {
+                    Label("Nueva carpeta", systemImage: "folder.badge.plus")
                 }
             } header: {
                 HStack {
@@ -62,7 +81,7 @@ struct SidebarView: View {
                 }
 
                 Button {
-                    showingAddFolder = true
+                    showingAddSmartFolder = true
                 } label: {
                     Label("Nueva Carpeta Inteligente", systemImage: "folder.badge.plus")
                 }
@@ -94,36 +113,61 @@ struct SidebarView: View {
         .sheet(isPresented: $showingAddFeed) {
             AddFeedView(feedsViewModel: feedsViewModel)
         }
-        .sheet(isPresented: $showingAddFolder) {
+        .sheet(isPresented: $showingAddFeedFolder) {
+            AddFeedFolderView(feedsViewModel: feedsViewModel)
+        }
+        .sheet(isPresented: $showingAddSmartFolder) {
             AddSmartFolderView(smartFoldersViewModel: smartFoldersViewModel)
         }
         .sheet(isPresented: $showingSettings) {
-            SettingsView(newsViewModel: newsViewModel, smartFoldersViewModel: smartFoldersViewModel, feedsViewModel: feedsViewModel)
+            SettingsView(
+                newsViewModel: newsViewModel,
+                smartFoldersViewModel: smartFoldersViewModel,
+                smartFeedsViewModel: smartFeedsViewModel,
+                feedsViewModel: feedsViewModel
+            )
         }
+    }
+
+    private var feedFolderSections: [SidebarFeedFolderSection] {
+        let groupedFeedIDs = Set(feedsViewModel.feedFolders.flatMap { $0.feedIDs })
+        let ungroupedFeeds = feedsViewModel.feeds.filter { !groupedFeedIDs.contains($0.id) }
+
+        var sections: [SidebarFeedFolderSection] = feedsViewModel.feedFolders.map { folder in
+            let feeds = feedsViewModel.feeds.filter { folder.feedIDs.contains($0.id) }
+            return SidebarFeedFolderSection(id: folder.id, title: folder.name, feeds: feeds)
+        }
+
+        if !ungroupedFeeds.isEmpty {
+            sections.append(SidebarFeedFolderSection(id: SidebarFeedFolderSection.ungroupedID, title: "Sin carpeta", feeds: ungroupedFeeds))
+        }
+
+        return sections
+    }
+}
+
+private struct SidebarFeedFolderSection: Identifiable {
+    let id: UUID
+    let title: String
+    let feeds: [RSSFeed]
+
+    static let ungroupedID = UUID()
+
+    var count: Int {
+        feeds.count
     }
 }
 
 struct FeedRowView: View {
     let feed: RSSFeed
-    @ObservedObject var feedsViewModel: FeedsViewModel
 
     var body: some View {
-        HStack {
-            Image(systemName: feed.isEnabled ? "checkmark.circle.fill" : "circle")
-                .foregroundColor(feed.isEnabled ? .green : .gray)
-                .onTapGesture {
-                    feedsViewModel.toggleFeed(id: feed.id)
-                }
+        HStack(alignment: .top, spacing: 10) {
+            FeedIconView(urlString: feed.url, size: 22)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(feed.name)
                     .font(.headline)
-
-                if let lastUpdated = feed.lastUpdated {
-                    Text("Actualizado: \(lastUpdated, style: .relative)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
 
                 if let error = feed.lastFetchError {
                     Text(error)
@@ -174,6 +218,7 @@ struct SmartFolderRowView: View {
         SidebarView(
             feedsViewModel: FeedsViewModel(),
             smartFoldersViewModel: SmartFoldersViewModel(),
+            smartFeedsViewModel: SmartFeedsViewModel(),
             newsViewModel: NewsViewModel()
         )
     }

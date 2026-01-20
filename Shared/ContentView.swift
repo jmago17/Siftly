@@ -9,78 +9,36 @@ struct ContentView: View {
     @StateObject private var feedsViewModel = FeedsViewModel()
     @StateObject private var newsViewModel = NewsViewModel()
     @StateObject private var smartFoldersViewModel = SmartFoldersViewModel()
-    @State private var selectedTab = 0
+    @StateObject private var smartFeedsViewModel = SmartFeedsViewModel()
+    @State private var didInitialRefresh = false
 
     var body: some View {
+        Group {
         #if os(iOS)
-        TabView(selection: $selectedTab) {
-            NavigationStack {
-                NewsListView(
-                    newsViewModel: newsViewModel,
-                    feedsViewModel: feedsViewModel,
-                    smartFoldersViewModel: smartFoldersViewModel
-                )
-            }
-            .tabItem {
-                Label("Noticias", systemImage: "newspaper")
-            }
-            .tag(0)
-
-            NavigationStack {
-                FavoritesView(
-                    newsViewModel: newsViewModel
-                )
-            }
-            .tabItem {
-                Label("Favoritos", systemImage: "star.fill")
-            }
-            .tag(1)
-
-            NavigationStack {
-                FeedsListView(
-                    feedsViewModel: feedsViewModel,
-                    newsViewModel: newsViewModel
-                )
-            }
-            .tabItem {
-                Label("Feeds", systemImage: "antenna.radiowaves.left.and.right")
-            }
-            .tag(2)
-
-            NavigationStack {
-                SmartFoldersListView(
-                    smartFoldersViewModel: smartFoldersViewModel,
-                    newsViewModel: newsViewModel
-                )
-            }
-            .tabItem {
-                Label("Carpetas", systemImage: "folder")
-            }
-            .tag(3)
-
-            SettingsView(
-                newsViewModel: newsViewModel,
-                smartFoldersViewModel: smartFoldersViewModel,
-                feedsViewModel: feedsViewModel
-            )
-            .tabItem {
-                Label("Ajustes", systemImage: "gear")
-            }
-            .tag(4)
-        }
+        NavigationMenuSheet(
+            feedsViewModel: feedsViewModel,
+            smartFoldersViewModel: smartFoldersViewModel,
+            smartFeedsViewModel: smartFeedsViewModel,
+            newsViewModel: newsViewModel,
+            showsCloseButton: false
+        )
         #elseif os(macOS)
         NavigationSplitView {
             SidebarView(
                 feedsViewModel: feedsViewModel,
                 smartFoldersViewModel: smartFoldersViewModel,
+                smartFeedsViewModel: smartFeedsViewModel,
                 newsViewModel: newsViewModel
             )
         } detail: {
-            NewsListView(
-                newsViewModel: newsViewModel,
-                feedsViewModel: feedsViewModel,
-                smartFoldersViewModel: smartFoldersViewModel
-            )
+            NavigationStack {
+                FeedsListView(
+                    feedsViewModel: feedsViewModel,
+                    newsViewModel: newsViewModel,
+                    smartFoldersViewModel: smartFoldersViewModel,
+                    smartFeedsViewModel: smartFeedsViewModel
+                )
+            }
         }
         .toolbar {
             ToolbarItem(placement: .navigation) {
@@ -94,6 +52,26 @@ struct ContentView: View {
             }
         }
         #endif
+        }
+        .task {
+            guard !didInitialRefresh else { return }
+            didInitialRefresh = true
+            await refreshOnLaunch()
+        }
+    }
+
+    private func refreshOnLaunch() async {
+        guard newsViewModel.newsItems.isEmpty else { return }
+
+        let newsItems = await feedsViewModel.fetchAllFeeds()
+        guard !newsItems.isEmpty else { return }
+
+        await newsViewModel.processNewsItems(
+            newsItems,
+            smartFolders: smartFoldersViewModel.smartFolders,
+            feeds: feedsViewModel.feeds
+        )
+        smartFoldersViewModel.updateMatchCounts(newsItems: newsViewModel.newsItems)
     }
 }
 

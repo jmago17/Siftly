@@ -10,17 +10,23 @@ import Combine
 @MainActor
 class FeedsViewModel: ObservableObject {
     @Published var feeds: [RSSFeed] = []
+    @Published var feedFolders: [FeedFolder] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var iCloudSyncEnabled = true
 
     private let userDefaultsKey = "rssFeeds"
+    private let feedFoldersKey = "feedFolders"
+    private let feedSourceKey = "feedSource"
     private let timeout: TimeInterval = 10.0
     private let cloudSync = CloudSyncService.shared
     private var cancellables = Set<AnyCancellable>()
 
     init() {
         loadFromDisk()
+        loadFoldersFromDisk()
+        WidgetExportStore.saveFeeds(feeds)
+        WidgetExportStore.saveFolders(feedFolders)
         setupCloudSync()
 
         // Sync from iCloud on first launch
@@ -46,6 +52,10 @@ class FeedsViewModel: ObservableObject {
             // Merge cloud feeds with local feeds
             mergeFeeds(cloudFeeds)
         }
+
+        if let cloudFolders = cloudSync.loadFeedFolders() {
+            mergeFeedFolders(cloudFolders)
+        }
     }
 
     private func mergeFeeds(_ cloudFeeds: [RSSFeed]) {
@@ -68,6 +78,23 @@ class FeedsViewModel: ObservableObject {
         feeds = mergedFeeds
         saveToDisk()
     }
+
+    private func mergeFeedFolders(_ cloudFolders: [FeedFolder]) {
+        var mergedFolders = feedFolders
+
+        for cloudFolder in cloudFolders {
+            if let index = mergedFolders.firstIndex(where: { $0.id == cloudFolder.id }) {
+                let mergedFeedIDs = Array(Set(mergedFolders[index].feedIDs + cloudFolder.feedIDs))
+                mergedFolders[index].name = cloudFolder.name
+                mergedFolders[index].feedIDs = mergedFeedIDs
+            } else {
+                mergedFolders.append(cloudFolder)
+            }
+        }
+
+        feedFolders = mergedFolders
+        saveFoldersToDisk()
+    }
     
     // MARK: - CRUD Operations
     
@@ -85,6 +112,7 @@ class FeedsViewModel: ObservableObject {
     
     func deleteFeed(id: UUID) {
         feeds.removeAll { $0.id == id }
+        removeFeedFromFolders(id: id)
         saveToDisk()
     }
     
@@ -92,6 +120,81 @@ class FeedsViewModel: ObservableObject {
         if let index = feeds.firstIndex(where: { $0.id == id }) {
             feeds[index].isEnabled.toggle()
             saveToDisk()
+        }
+    }
+
+    func setFeedPriorityBoost(id: UUID, boost: Int) {
+        if let index = feeds.firstIndex(where: { $0.id == id }) {
+            let clamped = max(0, min(100, boost))
+            feeds[index].priorityBoost = clamped
+            saveToDisk()
+        }
+    }
+
+    func setFeedMutedInNews(id: UUID, isMuted: Bool) {
+        if let index = feeds.firstIndex(where: { $0.id == id }) {
+            feeds[index].isMutedInNews = isMuted
+            saveToDisk()
+        }
+    }
+
+    func setFeedOpenInSafariReader(id: UUID, open: Bool) {
+        if let index = feeds.firstIndex(where: { $0.id == id }) {
+            feeds[index].openInSafariReader = open
+            saveToDisk()
+        }
+    }
+
+    // MARK: - Feed Folder Operations
+
+    func addFeedFolder(_ folder: FeedFolder) {
+        feedFolders.append(folder)
+        saveFoldersToDisk()
+    }
+
+    func updateFeedFolder(_ folder: FeedFolder) {
+        if let index = feedFolders.firstIndex(where: { $0.id == folder.id }) {
+            feedFolders[index] = folder
+            saveFoldersToDisk()
+        }
+    }
+
+    func deleteFeedFolder(id: UUID) {
+        feedFolders.removeAll { $0.id == id }
+        saveFoldersToDisk()
+    }
+
+    func assignFeed(_ feedID: UUID, to folderID: UUID?) {
+        for index in feedFolders.indices {
+            feedFolders[index].feedIDs.removeAll { $0 == feedID }
+        }
+
+        if let folderID = folderID,
+           let folderIndex = feedFolders.firstIndex(where: { $0.id == folderID }) {
+            if !feedFolders[folderIndex].feedIDs.contains(feedID) {
+                feedFolders[folderIndex].feedIDs.append(feedID)
+            }
+        }
+
+        saveFoldersToDisk()
+    }
+
+    func folderID(for feedID: UUID) -> UUID? {
+        feedFolders.first { $0.feedIDs.contains(feedID) }?.id
+    }
+
+    private func removeFeedFromFolders(id: UUID) {
+        var didChange = false
+        for index in feedFolders.indices {
+            let originalCount = feedFolders[index].feedIDs.count
+            feedFolders[index].feedIDs.removeAll { $0 == id }
+            if feedFolders[index].feedIDs.count != originalCount {
+                didChange = true
+            }
+        }
+
+        if didChange {
+            saveFoldersToDisk()
         }
     }
     
@@ -133,6 +236,20 @@ class FeedsViewModel: ObservableObject {
     }
     
     func fetchFeed(_ feed: RSSFeed) async throws -> [NewsItem] {
+        switch currentFeedSource {
+        case .rss:
+            return try await fetchFeedFromRSS(feed)
+        case .feedbin:
+            return try await fetchFeedFromFeedbin(feed)
+        }
+    }
+
+    private var currentFeedSource: FeedSource {
+        let raw = UserDefaults.standard.string(forKey: feedSourceKey) ?? FeedSource.rss.rawValue
+        return FeedSource(rawValue: raw) ?? .rss
+    }
+
+    private func fetchFeedFromRSS(_ feed: RSSFeed) async throws -> [NewsItem] {
         guard let url = URL(string: feed.url) else {
             throw FeedError.invalidURL
         }
@@ -151,13 +268,79 @@ class FeedsViewModel: ObservableObject {
             throw FeedError.httpError(statusCode: httpResponse.statusCode)
         }
         
-        let items = RSSParser.parse(data: data, feedID: feed.id, feedName: feed.name)
+        let items = RSSParser.parse(data: data, feedID: feed.id, feedName: feed.name, feedURL: url)
         
         guard !items.isEmpty else {
             throw FeedError.noItemsFound
         }
         
         return items
+    }
+
+    private func fetchFeedFromFeedbin(_ feed: RSSFeed) async throws -> [NewsItem] {
+        let result = try await FeedbinService.shared.fetchEntries(for: feed.url, limit: 50)
+        let subscription = result.0
+        let entries = result.1
+        let fallbackLink: String? = subscription.siteURL ?? subscription.feedURL
+
+        let items = entries.compactMap { entry -> NewsItem? in
+            let link = entry.url
+                ?? firstURL(in: entry.summary)
+                ?? firstURL(in: entry.content)
+                ?? fallbackLink
+            guard let link, !link.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+
+            let title = (entry.title ?? "Sin titulo").trimmingCharacters(in: .whitespacesAndNewlines)
+            let summaryHTML = entry.summary ?? entry.content ?? ""
+            let summaryText = cleanHTMLSummary(summaryHTML)
+
+            let pubDate = entry.published ?? entry.createdAt
+            let entryID = "feedbin-\(entry.id)"
+
+            return NewsItem(
+                id: entryID,
+                title: title.isEmpty ? "Sin titulo" : title,
+                summary: summaryText,
+                link: link,
+                pubDate: pubDate,
+                feedID: feed.id,
+                feedName: feed.name,
+                imageURL: nil,
+                author: entry.author,
+                rawSummary: entry.summary,
+                rawContent: entry.content,
+                cleanTitle: nil,
+                cleanBody: nil,
+                qualityScore: nil,
+                duplicateGroupID: nil,
+                smartFolderIDs: []
+            )
+        }
+
+        guard !items.isEmpty else {
+            throw FeedError.noItemsFound
+        }
+
+        return items
+    }
+
+    private func cleanHTMLSummary(_ html: String) -> String {
+        let stripped = HTMLCleaner.stripTags(html)
+        let decoded = HTMLCleaner.decodeHTMLEntities(stripped)
+        return decoded.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func firstURL(in text: String?) -> String? {
+        guard let text, !text.isEmpty else { return nil }
+        let pattern = "(?i)https?://[^\\s\"'<>]+"
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return nil
+        }
+        let nsText = text as NSString
+        let match = regex.firstMatch(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
+        guard let match else { return nil }
+        return nsText.substring(with: match.range)
     }
     
     func validateFeedURL(_ urlString: String) async -> (Bool, String) {
@@ -183,7 +366,7 @@ class FeedsViewModel: ObservableObject {
                 return (false, "Error HTTP: \(httpResponse.statusCode)")
             }
             
-            let items = RSSParser.parse(data: data, feedID: UUID(), feedName: "test")
+            let items = RSSParser.parse(data: data, feedID: UUID(), feedName: "test", feedURL: url)
             
             if items.isEmpty {
                 return (false, "No se encontraron elementos en el feed")
@@ -208,8 +391,25 @@ class FeedsViewModel: ObservableObject {
             if iCloudSyncEnabled {
                 cloudSync.saveFeeds(feeds)
             }
+            WidgetExportStore.saveFeeds(feeds)
         } catch {
             print("Error saving feeds: \(error)")
+        }
+    }
+
+    private func saveFoldersToDisk() {
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(feedFolders)
+            UserDefaults.standard.set(data, forKey: feedFoldersKey)
+
+            // Sync to iCloud if enabled
+            if iCloudSyncEnabled {
+                cloudSync.saveFeedFolders(feedFolders)
+            }
+            WidgetExportStore.saveFolders(feedFolders)
+        } catch {
+            print("Error saving feed folders: \(error)")
         }
     }
     
@@ -224,6 +424,20 @@ class FeedsViewModel: ObservableObject {
         } catch {
             print("Error loading feeds: \(error)")
             feeds = []
+        }
+    }
+
+    private func loadFoldersFromDisk() {
+        guard let data = UserDefaults.standard.data(forKey: feedFoldersKey) else {
+            return
+        }
+
+        do {
+            let decoder = JSONDecoder()
+            feedFolders = try decoder.decode([FeedFolder].self, from: data)
+        } catch {
+            print("Error loading feed folders: \(error)")
+            feedFolders = []
         }
     }
 }

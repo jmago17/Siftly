@@ -11,6 +11,8 @@ struct DeduplicatedNewsItem: Identifiable {
     let title: String
     let summary: String
     let pubDate: Date?
+    let imageURL: String?
+    let author: String?
 
     /// All news items that are duplicates (including the primary one)
     let sources: [NewsItemSource]
@@ -47,6 +49,8 @@ struct DeduplicatedNewsItem: Identifiable {
         self.title = newsItem.title
         self.summary = newsItem.summary
         self.pubDate = newsItem.pubDate
+        self.imageURL = newsItem.imageURL
+        self.author = newsItem.author
         self.sources = [NewsItemSource(from: newsItem)]
         self.qualityScore = newsItem.qualityScore
         self.smartFolderIDs = newsItem.smartFolderIDs
@@ -62,6 +66,8 @@ struct DeduplicatedNewsItem: Identifiable {
         self.title = first.title
         self.summary = first.summary
         self.pubDate = first.pubDate
+        self.imageURL = duplicates.compactMap { $0.imageURL }.first
+        self.author = duplicates.compactMap { $0.author }.first
         self.sources = duplicates.map { NewsItemSource(from: $0) }
 
         // Use the best quality score among duplicates
@@ -70,6 +76,20 @@ struct DeduplicatedNewsItem: Identifiable {
 
         // Combine all smart folder IDs
         self.smartFolderIDs = Array(Set(duplicates.flatMap { $0.smartFolderIDs }))
+    }
+
+    /// Initialize with pre-filtered sources
+    init(id: String, title: String, summary: String, pubDate: Date?, sources: [NewsItemSource], smartFolderIDs: [UUID], author: String? = nil) {
+        self.id = id
+        self.title = title
+        self.summary = summary
+        self.pubDate = pubDate
+        self.sources = sources
+        self.imageURL = sources.compactMap { $0.imageURL }.first
+        self.author = author ?? sources.compactMap { $0.author }.first
+        self.qualityScore = sources.compactMap { $0.qualityScore }
+            .max(by: { $0.overallScore < $1.overallScore })
+        self.smartFolderIDs = smartFolderIDs
     }
 
     /// Check if this item has multiple sources
@@ -85,6 +105,8 @@ struct NewsItemSource: Identifiable {
     let feedName: String
     let link: String
     let qualityScore: QualityScore?
+    let imageURL: String?
+    let author: String?
 
     /// Read status for this specific source
     var isRead: Bool {
@@ -110,6 +132,8 @@ struct NewsItemSource: Identifiable {
         self.feedName = newsItem.feedName
         self.link = newsItem.link
         self.qualityScore = newsItem.qualityScore
+        self.imageURL = newsItem.imageURL
+        self.author = newsItem.author
     }
 
     /// Mark this source as read

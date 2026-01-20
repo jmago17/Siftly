@@ -4,96 +4,58 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct SettingsView: View {
     @ObservedObject var newsViewModel: NewsViewModel
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
+    @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
     @ObservedObject var feedsViewModel: FeedsViewModel
 
-    @State private var claudeKey: String
-    @State private var openAIKey: String
-    @State private var selectedProvider: AIProvider
-    @State private var showingManageFolders = false
     @State private var showingOPML = false
     @State private var iCloudSyncEnabled = true
     @State private var openInAppBrowser = UserDefaults.standard.bool(forKey: "openInAppBrowser")
+    @State private var feedbinUsername: String
+    @State private var feedbinPassword: String
+    @State private var feedbinAlertMessage = ""
+    @State private var showingFeedbinAlert = false
+    @AppStorage("feedSource") private var feedSourceRaw = FeedSource.rss.rawValue
 
-    init(newsViewModel: NewsViewModel, smartFoldersViewModel: SmartFoldersViewModel, feedsViewModel: FeedsViewModel) {
+    init(newsViewModel: NewsViewModel, smartFoldersViewModel: SmartFoldersViewModel, smartFeedsViewModel: SmartFeedsViewModel, feedsViewModel: FeedsViewModel) {
         self.newsViewModel = newsViewModel
         self.smartFoldersViewModel = smartFoldersViewModel
+        self.smartFeedsViewModel = smartFeedsViewModel
         self.feedsViewModel = feedsViewModel
-        _claudeKey = State(initialValue: newsViewModel.claudeAPIKey)
-        _openAIKey = State(initialValue: newsViewModel.openAIAPIKey)
-        _selectedProvider = State(initialValue: newsViewModel.selectedProvider)
         _iCloudSyncEnabled = State(initialValue: feedsViewModel.iCloudSyncEnabled)
+        let creds = FeedbinService.shared.credentials
+        _feedbinUsername = State(initialValue: creds?.username ?? "")
+        _feedbinPassword = State(initialValue: creds?.password ?? "")
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                // AI Provider Section
                 Section {
-                    Picker("Proveedor de IA", selection: $selectedProvider) {
-                        ForEach(AIProvider.allCases, id: \.self) { provider in
-                            Text(provider.rawValue).tag(provider)
-                        }
-                    }
-                    .onChange(of: selectedProvider) { _, newValue in
-                        newsViewModel.updateProvider(newValue)
+                    HStack {
+                        Text("Proveedor")
+                        Spacer()
+                        Text("Apple Intelligence")
+                            .foregroundColor(.secondary)
                     }
 
-                    if selectedProvider == .appleIntelligence {
-                        HStack {
-                            Image(systemName: "info.circle")
-                                .foregroundColor(.blue)
-                            Text("Disponible en iOS 18+ y macOS 15+")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                    HStack {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.blue)
+                        Text("Disponible en iOS 18+ y macOS 15+")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 } header: {
                     Text("Servicio de IA")
                 } footer: {
-                    Text("Selecciona el servicio de IA para analizar y clasificar noticias")
-                }
-
-                // API Keys Section
-                if selectedProvider.requiresAPIKey {
-                    Section {
-                        if selectedProvider == .claude {
-                            SecureField("Claude API Key", text: $claudeKey)
-                                #if os(iOS)
-                                .textContentType(.password)
-                                .autocapitalization(.none)
-                                #endif
-                                .onChange(of: claudeKey) { _, newValue in
-                                    newsViewModel.updateAPIKeys(claude: newValue, openAI: openAIKey)
-                                }
-
-                            Link("Obtener API Key de Claude", destination: URL(string: "https://console.anthropic.com/")!)
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                        }
-
-                        if selectedProvider == .openAI {
-                            SecureField("OpenAI API Key", text: $openAIKey)
-                                #if os(iOS)
-                                .textContentType(.password)
-                                .autocapitalization(.none)
-                                #endif
-                                .onChange(of: openAIKey) { _, newValue in
-                                    newsViewModel.updateAPIKeys(claude: claudeKey, openAI: newValue)
-                                }
-
-                            Link("Obtener API Key de OpenAI", destination: URL(string: "https://platform.openai.com/api-keys")!)
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                        }
-                    } header: {
-                        Text("API Key")
-                    } footer: {
-                        Text("Tu API key se almacena de forma segura en el dispositivo")
-                    }
+                    Text("Apple Intelligence es el unico servicio de IA configurado para analizar noticias.")
                 }
 
                 // Reading Preferences
@@ -104,10 +66,76 @@ struct SettingsView: View {
                     .onChange(of: openInAppBrowser) { _, newValue in
                         UserDefaults.standard.set(newValue, forKey: "openInAppBrowser")
                     }
+
+                    #if os(iOS)
+                    NavigationLink {
+                        AppIconSettingsView()
+                    } label: {
+                        Label("Icono de la app", systemImage: "app.badge")
+                    }
+                    #endif
+
                 } header: {
                     Text("Lectura")
                 } footer: {
                     Text("Cuando está activado, los artículos se abren en el navegador interno de la app. Cuando está desactivado, se abren en Safari o tu navegador predeterminado.")
+                }
+
+                Section {
+                    Picker("Fuente de noticias", selection: $feedSourceRaw) {
+                        ForEach(FeedSource.allCases) { source in
+                            Text(source.displayName).tag(source.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    if let source = FeedSource(rawValue: feedSourceRaw) {
+                        Text(source.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    if feedSourceRaw == FeedSource.feedbin.rawValue && !FeedbinService.shared.hasCredentials {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.orange)
+                            Text("Feedbin requiere credenciales para cargar noticias.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Origen de noticias")
+                } footer: {
+                    Text("Selecciona entre RSS directo o Feedbin. Puedes cambiarlo cuando quieras.")
+                }
+
+                Section {
+                    TextField("Usuario o token", text: $feedbinUsername)
+                        #if os(iOS)
+                        .textContentType(.username)
+                        .autocapitalization(.none)
+                        #endif
+
+                    SecureField("Contrasena", text: $feedbinPassword)
+                        #if os(iOS)
+                        .textContentType(.password)
+                        .autocapitalization(.none)
+                        #endif
+
+                    Button("Guardar credenciales") {
+                        FeedbinService.shared.updateCredentials(username: feedbinUsername, password: feedbinPassword)
+                    }
+
+                    Button("Probar conexion") {
+                        Task {
+                            await testFeedbinConnection()
+                        }
+                    }
+                } header: {
+                    Text("Feedbin")
+                } footer: {
+                    Text("Usa Feedbin para depurar feeds y comparar resultados.")
                 }
 
                 // iCloud Sync
@@ -118,11 +146,13 @@ struct SettingsView: View {
                     .onChange(of: iCloudSyncEnabled) { _, newValue in
                         feedsViewModel.iCloudSyncEnabled = newValue
                         smartFoldersViewModel.iCloudSyncEnabled = newValue
+                        smartFeedsViewModel.iCloudSyncEnabled = newValue
                         newsViewModel.iCloudSyncEnabled = newValue
 
                         if newValue {
                             feedsViewModel.syncFromCloud()
                             smartFoldersViewModel.syncFromCloud()
+                            smartFeedsViewModel.syncFromCloud()
                         }
                     }
 
@@ -198,13 +228,29 @@ struct SettingsView: View {
             .sheet(isPresented: $showingOPML) {
                 OPMLImportExportView(feedsViewModel: feedsViewModel)
             }
+            .alert("Feedbin", isPresented: $showingFeedbinAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(feedbinAlertMessage)
+            }
         }
+    }
+
+    private func testFeedbinConnection() async {
+        do {
+            let count = try await FeedbinService.shared.testConnection()
+            feedbinAlertMessage = "Conexion correcta. Suscripciones: \(count)"
+        } catch {
+            feedbinAlertMessage = error.localizedDescription
+        }
+        showingFeedbinAlert = true
     }
 }
 
 struct ManageSmartFoldersView: View {
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
     @State private var showingAddFolder = false
+    @State private var folderToEdit: SmartFolder?
 
     var body: some View {
         List {
@@ -232,6 +278,13 @@ struct ManageSmartFoldersView: View {
                     }
                 }
                 .padding(.vertical, 4)
+                .contextMenu {
+                    Button {
+                        folderToEdit = folder
+                    } label: {
+                        Label("Editar", systemImage: "pencil")
+                    }
+                }
             }
             .onDelete { indexSet in
                 indexSet.forEach { index in
@@ -252,6 +305,9 @@ struct ManageSmartFoldersView: View {
         .sheet(isPresented: $showingAddFolder) {
             AddSmartFolderView(smartFoldersViewModel: smartFoldersViewModel)
         }
+        .sheet(item: $folderToEdit) { folder in
+            AddSmartFolderView(smartFoldersViewModel: smartFoldersViewModel, smartFolder: folder)
+        }
     }
 }
 
@@ -259,6 +315,91 @@ struct ManageSmartFoldersView: View {
     SettingsView(
         newsViewModel: NewsViewModel(),
         smartFoldersViewModel: SmartFoldersViewModel(),
+        smartFeedsViewModel: SmartFeedsViewModel(),
         feedsViewModel: FeedsViewModel()
     )
 }
+
+#if os(iOS)
+private struct AppIconOption: Identifiable {
+    let id: String
+    let title: String
+    let iconName: String?
+
+    static let all: [AppIconOption] = [
+        AppIconOption(id: "default", title: "Automático", iconName: nil),
+        AppIconOption(id: "light", title: "Claro", iconName: "AppIconLight"),
+        AppIconOption(id: "dark", title: "Oscuro", iconName: "AppIconDark")
+    ]
+}
+
+struct AppIconSettingsView: View {
+    @State private var currentIconName: String?
+    @State private var alertMessage = ""
+    @State private var showAlert = false
+
+    var body: some View {
+        List {
+            if !UIApplication.shared.supportsAlternateIcons {
+                Section {
+                    Text("Este dispositivo no admite iconos alternativos.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Section {
+                ForEach(AppIconOption.all) { option in
+                    Button {
+                        setIcon(option)
+                    } label: {
+                        HStack {
+                            Text(option.title)
+                            Spacer()
+                            if isSelected(option) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                    .disabled(!UIApplication.shared.supportsAlternateIcons)
+                }
+            } header: {
+                Text("Selecciona un icono")
+            } footer: {
+                Text("Los iconos claros y oscuros se pueden ajustar aquí.")
+            }
+        }
+        .navigationTitle("Icono de la app")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .onAppear {
+            currentIconName = UIApplication.shared.alternateIconName
+        }
+        .alert("Icono de la app", isPresented: $showAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(alertMessage)
+        }
+    }
+
+    private func isSelected(_ option: AppIconOption) -> Bool {
+        if option.iconName == nil {
+            return currentIconName == nil
+        }
+        return currentIconName == option.iconName
+    }
+
+    private func setIcon(_ option: AppIconOption) {
+        UIApplication.shared.setAlternateIconName(option.iconName) { error in
+            if let error = error {
+                alertMessage = "No se pudo cambiar el icono: \(error.localizedDescription)"
+                showAlert = true
+            } else {
+                currentIconName = option.iconName
+            }
+        }
+    }
+}
+#endif

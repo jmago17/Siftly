@@ -7,10 +7,20 @@ import SwiftUI
 
 struct AddSmartFolderView: View {
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
+    let smartFolder: SmartFolder?
     @Environment(\.dismiss) private var dismiss
 
-    @State private var folderName = ""
-    @State private var folderDescription = ""
+    @State private var folderName: String
+    @State private var folderDescription: String
+    @State private var filters: ArticleFilterOptions
+
+    init(smartFoldersViewModel: SmartFoldersViewModel, smartFolder: SmartFolder? = nil) {
+        self.smartFoldersViewModel = smartFoldersViewModel
+        self.smartFolder = smartFolder
+        _folderName = State(initialValue: smartFolder?.name ?? "")
+        _folderDescription = State(initialValue: smartFolder?.description ?? "")
+        _filters = State(initialValue: smartFolder?.filters ?? ArticleFilterOptions())
+    }
 
     var body: some View {
         NavigationStack {
@@ -34,6 +44,8 @@ struct AddSmartFolderView: View {
                 } footer: {
                     Text("Describe qué tipo de noticias debe contener esta carpeta. La IA usará esta descripción para clasificar artículos automáticamente.")
                 }
+
+                ArticleFilterOptionsView(filters: $filters)
 
                 Section {
                     Text("Ejemplos de descripciones:")
@@ -59,7 +71,7 @@ struct AddSmartFolderView: View {
                     .font(.caption2)
                 }
             }
-            .navigationTitle("Nueva Carpeta Inteligente")
+            .navigationTitle(smartFolder == nil ? "Nueva Carpeta Inteligente" : "Editar Carpeta Inteligente")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -71,7 +83,7 @@ struct AddSmartFolderView: View {
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Crear") {
+                    Button(smartFolder == nil ? "Crear" : "Guardar") {
                         saveFolder()
                     }
                     .disabled(!canSave)
@@ -85,8 +97,19 @@ struct AddSmartFolderView: View {
     }
 
     private func saveFolder() {
-        let folder = SmartFolder(name: folderName, description: folderDescription)
-        smartFoldersViewModel.addFolder(folder)
+        let trimmedName = folderName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedDescription = folderDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if var existing = smartFolder {
+            existing.name = trimmedName
+            existing.description = trimmedDescription
+            existing.filters = filters
+            smartFoldersViewModel.updateFolder(existing)
+        } else {
+            var folder = SmartFolder(name: trimmedName, description: trimmedDescription)
+            folder.filters = filters
+            smartFoldersViewModel.addFolder(folder)
+        }
         dismiss()
     }
 }

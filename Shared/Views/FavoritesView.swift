@@ -12,12 +12,15 @@ import AppKit
 
 struct FavoritesView: View {
     @ObservedObject var newsViewModel: NewsViewModel
+    @ObservedObject var feedsViewModel: FeedsViewModel
+    @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
+    var smartFoldersViewModel: SmartFoldersViewModel = SmartFoldersViewModel()
     @State private var readFilter: ReadFilter = .all
     @State private var minScoreFilter: Int = 0
-    @State private var showingFilters = false
+    @State private var showStarredOnly: Bool = true // Always true for Favorites
 
     var body: some View {
-        Group {
+        VStack(spacing: 0) {
             if filteredFavorites.isEmpty {
                 ContentUnavailableView {
                     Label("No hay favoritos", systemImage: "star")
@@ -60,45 +63,27 @@ struct FavoritesView: View {
 
                     List {
                         ForEach(filteredFavorites) { item in
-                            DeduplicatedNewsRowView(newsItem: item, newsViewModel: newsViewModel)
-                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                    Button {
-                                        toggleFavorite(item)
-                                    } label: {
-                                        Label("Quitar favorito", systemImage: "star.slash.fill")
-                                    }
-                                    .tint(.yellow)
-                                }
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button {
-                                        toggleRead(item)
-                                    } label: {
-                                        Label(item.isRead ? "No leído" : "Leído", systemImage: item.isRead ? "envelope.open.fill" : "envelope.fill")
-                                    }
-                                    .tint(item.isRead ? .orange : .blue)
-                                }
+                            UnifiedArticleRow(
+                                newsItem: item,
+                                newsViewModel: newsViewModel,
+                                feedSettings: feedSettings
+                            )
                         }
                     }
                 }
             }
-        }
-        .navigationTitle("Favoritos (\(filteredFavorites.count))")
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    showingFilters = true
-                } label: {
-                    Image(systemName: "line.3.horizontal.decrease.circle")
-                }
-            }
-        }
-        .sheet(isPresented: $showingFilters) {
-            FilterSettingsView(
+
+            ArticleListBottomBar(
                 readFilter: $readFilter,
+                showStarredOnly: $showStarredOnly,
                 minScoreFilter: $minScoreFilter,
-                feedName: "favoritos"
+                feedsViewModel: feedsViewModel,
+                smartFoldersViewModel: smartFoldersViewModel,
+                smartFeedsViewModel: smartFeedsViewModel,
+                newsViewModel: newsViewModel
             )
         }
+        .navigationTitle("Favoritos (\(filteredFavorites.count))")
     }
 
     private var filteredFavorites: [DeduplicatedNewsItem] {
@@ -127,27 +112,17 @@ struct FavoritesView: View {
         return news
     }
 
-    private func toggleRead(_ item: DeduplicatedNewsItem) {
-        let newReadStatus = !item.isRead
-        for source in item.sources {
-            newsViewModel.markAsRead(source.id, isRead: newReadStatus)
-        }
-        // Trigger refresh
-        newsViewModel.objectWillChange.send()
-    }
-
-    private func toggleFavorite(_ item: DeduplicatedNewsItem) {
-        let newFavoriteStatus = !item.isFavorite
-        for source in item.sources {
-            newsViewModel.markAsFavorite(source.id, isFavorite: newFavoriteStatus)
-        }
-        // Trigger refresh
-        newsViewModel.objectWillChange.send()
+    private var feedSettings: [UUID: RSSFeed] {
+        Dictionary(uniqueKeysWithValues: feedsViewModel.feeds.map { ($0.id, $0) })
     }
 }
 
 #Preview {
     NavigationStack {
-        FavoritesView(newsViewModel: NewsViewModel())
+        FavoritesView(
+            newsViewModel: NewsViewModel(),
+            feedsViewModel: FeedsViewModel(),
+            smartFeedsViewModel: SmartFeedsViewModel()
+        )
     }
 }

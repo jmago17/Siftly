@@ -11,6 +11,10 @@ protocol AIService {
     func classifyIntoSmartFolders(newsItem: NewsItem, smartFolders: [SmartFolder]) async throws -> [UUID]
 }
 
+protocol AIQuestionAnswering {
+    func answerQuestion(question: String, context: String) async throws -> String
+}
+
 enum AIServiceError: LocalizedError {
     case noAPIKey
     case invalidResponse

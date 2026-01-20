@@ -9,63 +9,68 @@ struct FeedNewsView: View {
     let feed: RSSFeed
     @ObservedObject var newsViewModel: NewsViewModel
     @ObservedObject var feedsViewModel: FeedsViewModel
+    @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
+    var smartFoldersViewModel: SmartFoldersViewModel = SmartFoldersViewModel()
 
     @State private var isRefreshing = false
     @State private var readFilter: ReadFilter = .all
     @State private var minScoreFilter: Int = 0
-    @State private var showingFilters = false
+    @State private var showStarredOnly: Bool = false
+    @State private var searchText = ""
 
     var body: some View {
-        Group {
+        VStack(spacing: 0) {
             if filteredNews.isEmpty {
                 ContentUnavailableView {
                     Label("No hay noticias", systemImage: "newspaper")
                 } description: {
-                    Text("No hay noticias que coincidan con los filtros aplicados")
+                    Text(emptyStateMessage)
+                }
+                actions: {
+                    if hasActiveFilters {
+                        Button("Restablecer filtros") {
+                            readFilter = .all
+                            minScoreFilter = 0
+                            showStarredOnly = false
+                            searchText = ""
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
                 }
             } else {
                 List {
                     ForEach(filteredNews) { item in
-                        DeduplicatedNewsRowView(newsItem: item, newsViewModel: newsViewModel)
+                        UnifiedArticleRow(
+                            newsItem: item,
+                            newsViewModel: newsViewModel,
+                            feedSettings: feedSettings
+                        )
                     }
                 }
                 .refreshable {
                     await refreshFeed()
                 }
             }
+
+            ArticleListBottomBar(
+                readFilter: $readFilter,
+                showStarredOnly: $showStarredOnly,
+                minScoreFilter: $minScoreFilter,
+                feedsViewModel: feedsViewModel,
+                smartFoldersViewModel: smartFoldersViewModel,
+                smartFeedsViewModel: smartFeedsViewModel,
+                newsViewModel: newsViewModel
+            )
         }
         .navigationTitle(feed.name)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Button {
-                        showingFilters = true
-                    } label: {
-                        Label("Filtros", systemImage: "line.3.horizontal.decrease.circle")
-                    }
-
-                    Divider()
-
-                    Button {
-                        markAllAsRead()
-                    } label: {
-                        Label("Marcar todas como leídas", systemImage: "checkmark.circle")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
-            }
-        }
-        .sheet(isPresented: $showingFilters) {
-            FilterSettingsView(
-                readFilter: $readFilter,
-                minScoreFilter: $minScoreFilter,
-                feedName: feed.name
-            )
-        }
+        #if os(iOS)
+        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+        #else
+        .searchable(text: $searchText)
+        #endif
         .overlay {
             if isRefreshing {
                 ProgressView("Actualizando...")
@@ -77,7 +82,7 @@ struct FeedNewsView: View {
     }
 
     private var filteredNews: [DeduplicatedNewsItem] {
-        var news = newsViewModel.getDeduplicatedNewsItems(for: feed.id)
+        var news = unfilteredNews
 
         // Filter by read status
         switch readFilter {
@@ -99,7 +104,42 @@ struct FeedNewsView: View {
             }
         }
 
+        // Filter by starred
+        if showStarredOnly {
+            news = news.filter { $0.isFavorite }
+        }
+
+        if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let query = searchText.lowercased()
+            news = news.filter { item in
+                item.title.lowercased().contains(query)
+                || item.summary.lowercased().contains(query)
+            }
+        }
+
         return news
+    }
+
+    private var unfilteredNews: [DeduplicatedNewsItem] {
+        newsViewModel.getDeduplicatedNewsItems(for: feed.id)
+    }
+
+    private var hasActiveFilters: Bool {
+        if readFilter != .all { return true }
+        if minScoreFilter > 0 { return true }
+        if showStarredOnly { return true }
+        return !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var emptyStateMessage: String {
+        if hasActiveFilters {
+            let total = unfilteredNews.count
+            if total > 0 {
+                return "Hay \(total) articulos, pero los filtros actuales los ocultan."
+            }
+            return "No hay noticias que coincidan con los filtros aplicados."
+        }
+        return "No hay noticias disponibles para este feed."
     }
 
     private func refreshFeed() async {
@@ -119,9 +159,14 @@ struct FeedNewsView: View {
         for item in filteredNews {
             // Mark all sources as read
             for source in item.sources {
-                newsViewModel.markAsRead(source.id, isRead: true)
+                newsViewModel.markAsRead(source.id, isRead: true, notify: false)
             }
         }
+        newsViewModel.objectWillChange.send()
+    }
+
+    private var feedSettings: [UUID: RSSFeed] {
+        Dictionary(uniqueKeysWithValues: feedsViewModel.feeds.map { ($0.id, $0) })
     }
 }
 
@@ -213,7 +258,8 @@ struct FilterSettingsView: View {
         FeedNewsView(
             feed: RSSFeed(name: "Example Feed", url: "https://example.com"),
             newsViewModel: NewsViewModel(),
-            feedsViewModel: FeedsViewModel()
+            feedsViewModel: FeedsViewModel(),
+            smartFeedsViewModel: SmartFeedsViewModel()
         )
     }
 }

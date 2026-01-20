@@ -14,14 +14,30 @@ struct NewsListView: View {
     @ObservedObject var newsViewModel: NewsViewModel
     @ObservedObject var feedsViewModel: FeedsViewModel
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
+    @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
+    let smartFeedOverride: SmartFeed?
     @State private var selectedFeedID: UUID?
     @State private var selectedSmartFolderID: UUID?
     @State private var isRefreshing = false
     @State private var readFilter: ReadFilter = .unread
     @State private var minScoreFilter: Int = 0
-    @State private var showingFilters = false
-    @State private var showingBulkActions = false
-    @State private var bulkActionThreshold: Int = 50
+    @State private var searchText = ""
+    @State private var showStarredOnly: Bool = false
+    @AppStorage("selectedSmartFeedID") private var selectedSmartFeedIDValue = ""
+
+    init(
+        newsViewModel: NewsViewModel,
+        feedsViewModel: FeedsViewModel,
+        smartFoldersViewModel: SmartFoldersViewModel,
+        smartFeedsViewModel: SmartFeedsViewModel,
+        smartFeedOverride: SmartFeed? = nil
+    ) {
+        self.newsViewModel = newsViewModel
+        self.feedsViewModel = feedsViewModel
+        self.smartFoldersViewModel = smartFoldersViewModel
+        self.smartFeedsViewModel = smartFeedsViewModel
+        self.smartFeedOverride = smartFeedOverride
+    }
 
     var body: some View {
         Group {
@@ -67,81 +83,35 @@ struct NewsListView: View {
 
                     List {
                         ForEach(filteredDeduplicatedNews) { item in
-                            DeduplicatedNewsRowView(newsItem: item, newsViewModel: newsViewModel)
-                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                    Button {
-                                        toggleFavorite(item)
-                                    } label: {
-                                        Label(item.isFavorite ? "Quitar favorito" : "Favorito", systemImage: item.isFavorite ? "star.slash.fill" : "star.fill")
-                                    }
-                                    .tint(.yellow)
-                                }
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button {
-                                        toggleRead(item)
-                                    } label: {
-                                        Label(item.isRead ? "No leído" : "Leído", systemImage: item.isRead ? "envelope.open.fill" : "envelope.fill")
-                                    }
-                                    .tint(item.isRead ? .orange : .blue)
-                                }
+                            UnifiedArticleRow(
+                                newsItem: item,
+                                newsViewModel: newsViewModel,
+                                feedSettings: feedSettings
+                            )
                         }
                     }
                     .refreshable {
                         await refreshNews()
                     }
+
+                    ArticleListBottomBar(
+                        readFilter: $readFilter,
+                        showStarredOnly: $showStarredOnly,
+                        minScoreFilter: $minScoreFilter,
+                        feedsViewModel: feedsViewModel,
+                        smartFoldersViewModel: smartFoldersViewModel,
+                        smartFeedsViewModel: smartFeedsViewModel,
+                        newsViewModel: newsViewModel
+                    )
                 }
             }
         }
-        .navigationTitle("Noticias (\(filteredDeduplicatedNews.count))")
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    Button {
-                        showingFilters = true
-                    } label: {
-                        Label("Filtros", systemImage: "line.3.horizontal.decrease.circle")
-                    }
-
-                    Divider()
-
-                    Button {
-                        showingBulkActions = true
-                    } label: {
-                        Label("Acciones masivas", systemImage: "checklist")
-                    }
-
-                    Divider()
-
-                    if newsViewModel.isProcessing {
-                        ProgressView()
-                            .scaleEffect(0.7)
-                    } else {
-                        Button {
-                            Task {
-                                await refreshNews()
-                            }
-                        } label: {
-                            Label("Actualizar", systemImage: "arrow.clockwise")
-                        }
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
-            }
-        }
-        .sheet(isPresented: $showingFilters) {
-            FilterSettingsView(
-                readFilter: $readFilter,
-                minScoreFilter: $minScoreFilter,
-                feedName: "todas las noticias"
-            )
-        }
-        .sheet(isPresented: $showingBulkActions) {
-            BulkActionsView(
-                newsViewModel: newsViewModel,
-                threshold: $bulkActionThreshold
-            )
-        }
+        .navigationTitle(smartFeedTitle)
+        #if os(iOS)
+        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+        #else
+        .searchable(text: $searchText)
+        #endif
         .overlay {
             if isRefreshing {
                 ProgressView("Actualizando noticias...")
@@ -161,8 +131,15 @@ struct NewsListView: View {
     private var filteredDeduplicatedNews: [DeduplicatedNewsItem] {
         var news = newsViewModel.getDeduplicatedNewsItems(
             for: selectedFeedID,
-            smartFolderID: selectedSmartFolderID
+            smartFolderID: selectedSmartFolderID,
+            favoritesOnly: favoritesOnly
         )
+
+        if let smartFeed = effectiveSmartFeed {
+            news = applySmartFeedFilter(to: news, smartFeed: smartFeed)
+        }
+
+        news = applyMutedFeedFilter(to: news)
 
         // Filter by read status
         switch readFilter {
@@ -184,7 +161,36 @@ struct NewsListView: View {
             }
         }
 
+        // Filter by starred
+        if showStarredOnly {
+            news = news.filter { $0.isFavorite }
+        }
+
+        if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let query = searchText.lowercased()
+            news = news.filter { item in
+                item.title.lowercased().contains(query)
+                || item.summary.lowercased().contains(query)
+                || item.primarySource.feedName.lowercased().contains(query)
+            }
+        }
+
+        if news.count > 40 {
+            return Array(news.prefix(40))
+        }
+
         return news
+    }
+
+    private var feedSettings: [UUID: RSSFeed] {
+        Dictionary(uniqueKeysWithValues: feedsViewModel.feeds.map { ($0.id, $0) })
+    }
+
+    private var smartFeedTitle: String {
+        if let selectedSmartFeed = effectiveSmartFeed {
+            return "\(selectedSmartFeed.name) (\(filteredDeduplicatedNews.count))"
+        }
+        return "Todos los feeds (\(filteredDeduplicatedNews.count))"
     }
 
     private func refreshNews() async {
@@ -195,202 +201,93 @@ struct NewsListView: View {
 
         // Process with AI if needed
         if !newsItems.isEmpty {
-            await newsViewModel.processNewsItems(newsItems, smartFolders: smartFoldersViewModel.smartFolders)
+            await newsViewModel.processNewsItems(
+                newsItems,
+                smartFolders: smartFoldersViewModel.smartFolders,
+                feeds: feedsViewModel.feeds
+            )
             smartFoldersViewModel.updateMatchCounts(newsItems: newsViewModel.newsItems)
         }
 
         isRefreshing = false
     }
 
-    private func toggleRead(_ item: DeduplicatedNewsItem) {
-        let newReadStatus = !item.isRead
-        // Mark all sources as read/unread
-        for source in item.sources {
-            newsViewModel.markAsRead(source.id, isRead: newReadStatus)
-        }
-        // Trigger refresh
-        newsViewModel.objectWillChange.send()
-    }
+    private func applyMutedFeedFilter(to items: [DeduplicatedNewsItem]) -> [DeduplicatedNewsItem] {
+        let mutedFeedIDs = Set(feedsViewModel.feeds.filter { $0.isMutedInNews }.map { $0.id })
+        guard !mutedFeedIDs.isEmpty else { return items }
 
-    private func toggleFavorite(_ item: DeduplicatedNewsItem) {
-        let newFavoriteStatus = !item.isFavorite
-        // Mark all sources as favorite/unfavorite
-        for source in item.sources {
-            newsViewModel.markAsFavorite(source.id, isFavorite: newFavoriteStatus)
-        }
-        // Trigger refresh
-        newsViewModel.objectWillChange.send()
-    }
-}
-
-struct DeduplicatedNewsRowView: View {
-    let newsItem: DeduplicatedNewsItem
-    @ObservedObject var newsViewModel: NewsViewModel
-    @State private var selectedSource: NewsItemSource?
-    @State private var showingSourceSelector = false
-    @State private var refreshID = UUID()
-
-    private var openInAppBrowser: Bool {
-        UserDefaults.standard.bool(forKey: "openInAppBrowser")
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Title
-            Text(newsItem.title)
-                .font(.headline)
-                .lineLimit(2)
-
-            // Summary
-            if !newsItem.summary.isEmpty {
-                Text(newsItem.summary)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(3)
+        return items.compactMap { item in
+            let activeSources = item.sources.filter { !mutedFeedIDs.contains($0.feedID) }
+            guard !activeSources.isEmpty else { return nil }
+            if activeSources.count == item.sources.count {
+                return item
             }
-
-            HStack {
-                // Sources
-                if newsItem.hasDuplicates {
-                    HStack(spacing: 4) {
-                        Image(systemName: "doc.on.doc")
-                            .font(.caption2)
-                        Text("\(newsItem.sources.count) fuentes")
-                            .font(.caption)
-                    }
-                    .foregroundColor(.blue)
-                    .onTapGesture {
-                        showingSourceSelector = true
-                    }
-                } else {
-                    Text(newsItem.primarySource.feedName)
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                }
-
-                Spacer()
-
-                // Date
-                if let pubDate = newsItem.pubDate {
-                    Text(pubDate, style: .relative)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                // Quality score indicator
-                if let score = newsItem.qualityScore {
-                    QualityBadgeView(score: score)
-                }
-            }
-
-            // Warning badges
-            HStack(spacing: 4) {
-                if newsItem.qualityScore?.isClickbait == true {
-                    Badge(text: "Clickbait", color: .orange)
-                }
-                if newsItem.qualityScore?.isSpam == true {
-                    Badge(text: "Spam", color: .red)
-                }
-                if newsItem.qualityScore?.isAdvertisement == true {
-                    Badge(text: "Anuncio", color: .purple)
-                }
-                if newsItem.hasDuplicates {
-                    Badge(text: "Duplicado", color: .gray)
-                }
-            }
-        }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if openInAppBrowser {
-                // Open in-app browser
-                selectedSource = newsItem.primarySource
-            } else {
-                // Open in default browser
-                openInDefaultBrowser(newsItem.primarySource.link)
-                // Mark as read
-                newsItem.primarySource.markAsRead(true)
-            }
-        }
-        .sheet(item: $selectedSource) { source in
-            ArticleReaderView(url: source.link, title: newsItem.title)
-                .onDisappear {
-                    // Mark as read when reader closes
-                    source.markAsRead(true)
-                    newsViewModel.objectWillChange.send()
-                }
-            #if os(iOS)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-                .interactiveDismissDisabled(false)
-            #endif
-        }
-        .confirmationDialog("Seleccionar fuente", isPresented: $showingSourceSelector, titleVisibility: .visible) {
-            ForEach(newsItem.sources) { source in
-                Button(source.feedName) {
-                    if openInAppBrowser {
-                        selectedSource = source
-                    } else {
-                        openInDefaultBrowser(source.link)
-                        source.markAsRead(true)
-                    }
-                }
-            }
-            Button("Cancelar", role: .cancel) { }
-        } message: {
-            Text("Elige la fuente que quieres leer")
+            return DeduplicatedNewsItem(
+                id: item.id,
+                title: item.title,
+                summary: item.summary,
+                pubDate: item.pubDate,
+                sources: activeSources,
+                smartFolderIDs: item.smartFolderIDs,
+                author: item.author
+            )
         }
     }
 
-    private func openInDefaultBrowser(_ urlString: String) {
-        guard let url = URL(string: urlString) else { return }
+    private func applySmartFeedFilter(to items: [DeduplicatedNewsItem], smartFeed: SmartFeed) -> [DeduplicatedNewsItem] {
+        let feedIDs = Set(smartFeed.feedIDs)
 
-        #if os(iOS)
-        UIApplication.shared.open(url)
-        #elseif os(macOS)
-        NSWorkspace.shared.open(url)
-        #endif
-    }
-}
+        return items.compactMap { item in
+            let activeSources = feedIDs.isEmpty
+                ? item.sources
+                : item.sources.filter { feedIDs.contains($0.feedID) }
+            guard !activeSources.isEmpty else { return nil }
+            let candidate = activeSources.count == item.sources.count
+                ? item
+                : DeduplicatedNewsItem(
+                    id: item.id,
+                    title: item.title,
+                    summary: item.summary,
+                    pubDate: item.pubDate,
+                    sources: activeSources,
+                    smartFolderIDs: item.smartFolderIDs,
+                    author: item.author
+                )
 
-struct QualityBadgeView: View {
-    let score: QualityScore
+            let content = "\(candidate.title) \(candidate.summary)"
+            let author = candidate.author ?? candidate.primarySource.author
+            let matches = smartFeed.filters.matches(
+                content: content,
+                url: candidate.primarySource.link,
+                feedTitle: candidate.primarySource.feedName,
+                author: author,
+                date: candidate.pubDate
+            )
 
-    var body: some View {
-        Text("\(score.overallScore)")
-            .font(.caption2)
-            .fontWeight(.bold)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(scoreColor)
-            .foregroundColor(.white)
-            .clipShape(Capsule())
-    }
-
-    private var scoreColor: Color {
-        switch score.overallScore {
-        case 80...100:
-            return .green
-        case 50...79:
-            return .orange
-        default:
-            return .red
+            return matches ? candidate : nil
         }
     }
-}
 
-struct Badge: View {
-    let text: String
-    let color: Color
+    private var selectedSmartFeedID: UUID? {
+        get {
+            UUID(uuidString: selectedSmartFeedIDValue)
+        }
+        nonmutating set {
+            selectedSmartFeedIDValue = newValue?.uuidString ?? ""
+        }
+    }
 
-    var body: some View {
-        Text(text)
-            .font(.caption2)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.2))
-            .foregroundColor(color)
-            .clipShape(Capsule())
+    private var selectedSmartFeed: SmartFeed? {
+        guard let selectedID = selectedSmartFeedID else { return nil }
+        return smartFeedsViewModel.smartFeeds.first(where: { $0.id == selectedID })
+    }
+
+    private var effectiveSmartFeed: SmartFeed? {
+        smartFeedOverride ?? selectedSmartFeed
+    }
+
+    private var favoritesOnly: Bool {
+        effectiveSmartFeed?.kind == .favorites
     }
 }
 
@@ -541,7 +438,8 @@ struct BulkActionsView: View {
         NewsListView(
             newsViewModel: NewsViewModel(),
             feedsViewModel: FeedsViewModel(),
-            smartFoldersViewModel: SmartFoldersViewModel()
+            smartFoldersViewModel: SmartFoldersViewModel(),
+            smartFeedsViewModel: SmartFeedsViewModel()
         )
     }
 }

@@ -13,6 +13,16 @@ struct NewsItem: Codable, Identifiable {
     var pubDate: Date?
     var feedID: UUID
     var feedName: String
+    var imageURL: String?
+    var author: String?
+
+    // Raw HTML from RSS fields (optional, for improved extraction)
+    var rawSummary: String?
+    var rawContent: String?
+
+    // Cleaned article text for AI and reading views
+    var cleanTitle: String?
+    var cleanBody: String?
     
     // AI-powered fields
     var qualityScore: QualityScore?
@@ -46,5 +56,27 @@ struct NewsItem: Codable, Identifiable {
             UserDefaults.standard.set(newValue, forKey: "favorite_\(id)")
             CloudSyncService.shared.saveFavoriteState(id, isFavorite: newValue)
         }
+    }
+
+    var aiTitle: String {
+        if let cleanTitle = cleanTitle?.trimmingCharacters(in: .whitespacesAndNewlines), !cleanTitle.isEmpty {
+            return cleanTitle
+        }
+        return title
+    }
+
+    var aiSummary: String {
+        let base: String
+        if let cleanBody = cleanBody?.trimmingCharacters(in: .whitespacesAndNewlines), !cleanBody.isEmpty {
+            base = cleanBody
+        } else {
+            base = summary
+        }
+
+        if base.count > 3000 {
+            return String(base.prefix(3000))
+        }
+
+        return base
     }
 }

@@ -117,10 +117,17 @@ private class OPMLParser: NSObject, XMLParserDelegate {
         currentAttributes = attributeDict
 
         if elementName == "outline" {
-            // Check if it's a feed outline (has xmlUrl)
-            if let xmlUrl = attributeDict["xmlUrl"], !xmlUrl.isEmpty {
+            let normalizedAttributes = Dictionary(uniqueKeysWithValues: attributeDict.map { ($0.key.lowercased(), $0.value) })
+            let type = normalizedAttributes["type"]?.lowercased()
+
+            var feedURL = normalizedAttributes["xmlurl"]
+            if feedURL == nil, type == "rss" || type == "atom" {
+                feedURL = normalizedAttributes["url"] ?? normalizedAttributes["htmlurl"]
+            }
+
+            if let url = feedURL?.trimmingCharacters(in: .whitespacesAndNewlines), !url.isEmpty {
                 let name = attributeDict["title"] ?? attributeDict["text"] ?? "Untitled Feed"
-                let feed = RSSFeed(name: name, url: xmlUrl)
+                let feed = RSSFeed(name: name, url: url)
                 feeds.append(feed)
             }
         }

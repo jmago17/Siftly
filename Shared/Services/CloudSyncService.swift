@@ -12,7 +12,9 @@ class CloudSyncService: ObservableObject {
 
     private let store = NSUbiquitousKeyValueStore.default
     private let feedsKey = "icloud_rssFeeds"
+    private let feedFoldersKey = "icloud_feedFolders"
     private let smartFoldersKey = "icloud_smartFolders"
+    private let smartFeedsKey = "icloud_smartFeeds"
     private let readStatesKey = "icloud_readStates"
     private let favoriteStatesKey = "icloud_favoriteStates"
 
@@ -58,6 +60,27 @@ class CloudSyncService: ObservableObject {
         return try? JSONDecoder().decode([RSSFeed].self, from: data)
     }
 
+    /// Save feed folders to iCloud
+    func saveFeedFolders(_ folders: [FeedFolder]) {
+        guard let data = try? JSONEncoder().encode(folders) else {
+            syncError = "Error encoding feed folders"
+            return
+        }
+
+        store.set(data, forKey: feedFoldersKey)
+        store.synchronize()
+        lastSyncDate = Date()
+    }
+
+    /// Load feed folders from iCloud
+    func loadFeedFolders() -> [FeedFolder]? {
+        guard let data = store.data(forKey: feedFoldersKey) else {
+            return nil
+        }
+
+        return try? JSONDecoder().decode([FeedFolder].self, from: data)
+    }
+
     /// Save smart folders to iCloud
     func saveSmartFolders(_ folders: [SmartFolder]) {
         guard let data = try? JSONEncoder().encode(folders) else {
@@ -77,6 +100,27 @@ class CloudSyncService: ObservableObject {
         }
 
         return try? JSONDecoder().decode([SmartFolder].self, from: data)
+    }
+
+    /// Save smart feeds to iCloud
+    func saveSmartFeeds(_ feeds: [SmartFeed]) {
+        guard let data = try? JSONEncoder().encode(feeds) else {
+            syncError = "Error encoding smart feeds"
+            return
+        }
+
+        store.set(data, forKey: smartFeedsKey)
+        store.synchronize()
+        lastSyncDate = Date()
+    }
+
+    /// Load smart feeds from iCloud
+    func loadSmartFeeds() -> [SmartFeed]? {
+        guard let data = store.data(forKey: smartFeedsKey) else {
+            return nil
+        }
+
+        return try? JSONDecoder().decode([SmartFeed].self, from: data)
     }
 
     /// Save read states to iCloud

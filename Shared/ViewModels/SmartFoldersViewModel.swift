@@ -93,7 +93,9 @@ class SmartFoldersViewModel: ObservableObject {
     func updateMatchCounts(newsItems: [NewsItem]) {
         for index in smartFolders.indices {
             let folderID = smartFolders[index].id
-            let count = newsItems.filter { $0.smartFolderIDs.contains(folderID) }.count
+            let count = newsItems.filter { item in
+                item.smartFolderIDs.contains(folderID) && smartFolders[index].matchesFilters(for: item)
+            }.count
             smartFolders[index].matchCount = count
         }
         saveToDisk()
@@ -103,13 +105,14 @@ class SmartFoldersViewModel: ObservableObject {
     
     private func addDefaultFolders() {
         let defaultFolders = [
+            SmartFolder(name: "Cómics", description: "Tiras cómicas, viñetas, cómics diarios, ilustraciones humorísticas, humor gráfico. Solo contenido gráfico humorístico, NO noticias sobre cómics."),
             SmartFolder(name: "Tecnología", description: "Noticias sobre tecnología, software, hardware, inteligencia artificial, programación"),
             SmartFolder(name: "Política", description: "Noticias sobre política, elecciones, gobierno, partidos políticos"),
             SmartFolder(name: "Economía", description: "Noticias sobre economía, finanzas, bolsa, empresas, negocios"),
             SmartFolder(name: "Deportes", description: "Noticias sobre deportes, fútbol, baloncesto, tenis"),
             SmartFolder(name: "Ciencia", description: "Noticias sobre ciencia, investigación, descubrimientos, estudios")
         ]
-        
+
         smartFolders = defaultFolders
         saveToDisk()
     }

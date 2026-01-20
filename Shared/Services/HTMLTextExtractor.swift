@@ -21,42 +21,133 @@ class HTMLTextExtractor {
 
         let (data, _) = try await URLSession.shared.data(from: articleURL)
 
-        guard let html = String(data: data, encoding: .utf8) else {
-            throw ExtractionError.decodingFailed
-        }
+        let html = decodeHTML(data) ?? String(decoding: data, as: UTF8.self)
 
-        return parseHTML(html, url: url)
+        return parseHTML(html, url: articleURL)
     }
 
-    private func parseHTML(_ html: String, url: String) -> ArticleContent {
-        var text = html
+    private func parseHTML(_ html: String, url: URL) -> ArticleContent {
+        let metaTags = extractMetaTags(from: html)
 
-        // Remove script and style tags
-        text = removeTagsAndContent(text, tag: "script")
-        text = removeTagsAndContent(text, tag: "style")
-        text = removeTagsAndContent(text, tag: "nav")
-        text = removeTagsAndContent(text, tag: "header")
-        text = removeTagsAndContent(text, tag: "footer")
+        let imageURL = extractMetaContent(from: metaTags, keys: [
+            "og:image", "og:image:url", "twitter:image", "twitter:image:src"
+        ])
+        let author = extractMetaContent(from: metaTags, keys: [
+            "author", "article:author", "twitter:creator", "byline", "byl", "dc.creator"
+        ])
 
-        // Extract title
-        let title = extractTitle(from: html)
-
-        // Try to find main content area
-        let content = extractMainContent(from: text)
-
-        // Clean up the text
-        var cleanText = stripHTMLTags(content)
-        cleanText = decodeHTMLEntities(cleanText)
-        cleanText = cleanWhitespace(cleanText)
+        let extracted = ArticleTextExtractor.shared.extract(from: html, url: url, rssTitle: nil)
+        let cleanTitle = extracted.title.isEmpty ? "Articulo" : extracted.title
 
         return ArticleContent(
-            title: title,
-            text: cleanText,
-            url: url
+            title: cleanTitle,
+            text: extracted.body,
+            url: url.absoluteString,
+            imageURL: resolveRelativeURL(imageURL, base: url.absoluteString),
+            author: normalizeAuthor(author)
         )
     }
 
-    private func extractTitle(from html: String) -> String {
+    private func resolveRelativeURL(_ link: String?, base: String) -> String? {
+        guard let link = link?.trimmingCharacters(in: .whitespacesAndNewlines), !link.isEmpty else {
+            return nil
+        }
+
+        if let url = URL(string: link), url.scheme != nil {
+            return url.absoluteString
+        }
+
+        if let baseURL = URL(string: base), let resolved = URL(string: link, relativeTo: baseURL) {
+            return resolved.absoluteURL.absoluteString
+        }
+
+        return link
+    }
+
+    private func extractMetaTags(from html: String) -> [[String: String]] {
+        let pattern = "<meta\\s+[^>]*>"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return []
+        }
+
+        let nsString = html as NSString
+        let matches = regex.matches(in: html, options: [], range: NSRange(location: 0, length: nsString.length))
+
+        return matches.compactMap { match in
+            let tag = nsString.substring(with: match.range)
+            let attributes = parseAttributes(from: tag)
+            return attributes.isEmpty ? nil : attributes
+        }
+    }
+
+    private func parseAttributes(from tag: String) -> [String: String] {
+        let pattern = "([a-zA-Z0-9_:\\-]+)\\s*=\\s*['\\\"]([^'\\\"]+)['\\\"]"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
+            return [:]
+        }
+
+        let nsString = tag as NSString
+        let matches = regex.matches(in: tag, options: [], range: NSRange(location: 0, length: nsString.length))
+
+        var attributes: [String: String] = [:]
+        for match in matches {
+            if match.numberOfRanges >= 3 {
+                let key = nsString.substring(with: match.range(at: 1)).lowercased()
+                let value = nsString.substring(with: match.range(at: 2))
+                attributes[key] = value
+            }
+        }
+
+        return attributes
+    }
+
+    private func extractMetaContent(from metaTags: [[String: String]], keys: [String]) -> String? {
+        let targetKeys = Set(keys.map { $0.lowercased() })
+        for tag in metaTags {
+            let name = tag["name"]?.lowercased()
+            let property = tag["property"]?.lowercased()
+            if let candidate = name, targetKeys.contains(candidate) {
+                return tag["content"]
+            }
+            if let candidate = property, targetKeys.contains(candidate) {
+                return tag["content"]
+            }
+        }
+        return nil
+    }
+
+    private func normalizeAuthor(_ author: String?) -> String? {
+        guard let author = author?.trimmingCharacters(in: .whitespacesAndNewlines), !author.isEmpty else {
+            return nil
+        }
+
+        if author.hasPrefix("@") {
+            return String(author.dropFirst())
+        }
+
+        return author
+    }
+
+    private func decodeHTML(_ data: Data) -> String? {
+        if let utf8 = String(data: data, encoding: .utf8) {
+            return utf8
+        }
+        if let latin1 = String(data: data, encoding: .isoLatin1) {
+            return latin1
+        }
+        if let windows1252 = String(data: data, encoding: .windowsCP1252) {
+            return windows1252
+        }
+        return nil
+    }
+
+    private func extractTitle(from html: String, metaTags: [[String: String]]? = nil) -> String {
+        if let metaTags = metaTags,
+           let metaTitle = extractMetaContent(from: metaTags, keys: ["og:title", "twitter:title"]),
+           !metaTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return decodeHTMLEntities(metaTitle)
+        }
+
         // Try to extract from <title> tag
         if let titleRange = html.range(of: "<title[^>]*>([^<]+)</title>", options: .regularExpression) {
             let titleHTML = String(html[titleRange])
@@ -79,19 +170,11 @@ class HTMLTextExtractor {
     }
 
     private func extractMainContent(from html: String) -> String {
-        // Try to find article or main content tags
-        let contentTags = ["<article[^>]*>", "<main[^>]*>", "<div[^>]*class=['\"].*article.*['\"][^>]*>", "<div[^>]*class=['\"].*content.*['\"][^>]*>"]
-
-        for tag in contentTags {
-            if let range = html.range(of: tag, options: .regularExpression) {
-                let startIndex = range.upperBound
-                // Find the closing tag
-                let remaining = String(html[startIndex...])
-                return remaining
-            }
+        let candidates = extractContentCandidates(from: html)
+        if let best = selectBestCandidate(from: candidates) {
+            return best
         }
 
-        // If no specific content tag found, try to extract paragraphs
         let paragraphs = extractParagraphs(from: html)
         return paragraphs.joined(separator: "\n\n")
     }
@@ -109,13 +192,69 @@ class HTMLTextExtractor {
                 let range = match.range(at: 1)
                 let paragraph = nsString.substring(with: range)
                 let cleaned = stripHTMLTags(paragraph)
-                if cleaned.count > 20 { // Only keep substantial paragraphs
+                let trimmed = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+                if trimmed.count > 20 && !isBoilerplateParagraph(trimmed) {
                     paragraphs.append(decodeHTMLEntities(cleaned))
                 }
             }
         }
 
         return paragraphs
+    }
+
+    private func extractContentCandidates(from html: String) -> [String] {
+        let patterns: [(String, Int)] = [
+            ("<article[^>]*>(.*?)</article>", 1),
+            ("<main[^>]*>(.*?)</main>", 1),
+            ("<section[^>]*class=['\\\"][^'\\\"]*(article|content|post|entry|story|body|text)[^'\\\"]*['\\\"][^>]*>(.*?)</section>", 2),
+            ("<div[^>]*class=['\\\"][^'\\\"]*(article|content|post|entry|story|body|text)[^'\\\"]*['\\\"][^>]*>(.*?)</div>", 2),
+            ("<div[^>]*id=['\\\"][^'\\\"]*(article|content|post|entry|story|body|text)[^'\\\"]*['\\\"][^>]*>(.*?)</div>", 2)
+        ]
+
+        var results: [String] = []
+        for (pattern, captureIndex) in patterns {
+            guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators, .caseInsensitive]) else {
+                continue
+            }
+
+            let nsString = html as NSString
+            let matches = regex.matches(in: html, options: [], range: NSRange(location: 0, length: nsString.length))
+            for match in matches where match.numberOfRanges > captureIndex {
+                let range = match.range(at: captureIndex)
+                let content = nsString.substring(with: range)
+                if !content.isEmpty {
+                    results.append(content)
+                }
+            }
+        }
+
+        return results
+    }
+
+    private func selectBestCandidate(from candidates: [String]) -> String? {
+        var bestCandidate: String?
+        var bestScore = 0
+
+        for candidate in candidates {
+            let score = scoreCandidate(candidate)
+            if score > bestScore {
+                bestScore = score
+                bestCandidate = candidate
+            }
+        }
+
+        if bestScore < 80 {
+            return nil
+        }
+
+        return bestCandidate
+    }
+
+    private func scoreCandidate(_ html: String) -> Int {
+        let text = cleanWhitespace(stripHTMLTags(html))
+        let wordCount = text.split { $0.isWhitespace }.count
+        let paragraphCount = text.components(separatedBy: "\n\n").count
+        return wordCount + (paragraphCount * 20)
     }
 
     private func removeTagsAndContent(_ html: String, tag: String) -> String {
@@ -135,6 +274,68 @@ class HTMLTextExtractor {
         text = text.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
 
         return text
+    }
+
+    private func removeBoilerplate(from text: String) -> String {
+        let lines = text.components(separatedBy: .newlines)
+        let filtered = lines.filter { line in
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.count < 20 {
+                return false
+            }
+            return !isBoilerplateParagraph(trimmed)
+        }
+
+        return filtered.joined(separator: "\n")
+    }
+
+    private func isBoilerplateParagraph(_ text: String) -> Bool {
+        let lower = text.lowercased()
+
+        // Cookie/privacy related
+        let privacyKeywords = [
+            "cookies", "cookie", "privacidad", "privacy", "terminos", "terms",
+            "aviso legal", "legal notice", "acept", "consent", "gdpr"
+        ]
+        if privacyKeywords.contains(where: { lower.contains($0) }) {
+            return true
+        }
+
+        // Subscribe/newsletter related
+        let subscribeKeywords = [
+            "suscrib", "subscribe", "newsletter", "registrate", "sign up",
+            "join our", "get updates", "recibe noticias"
+        ]
+        if subscribeKeywords.contains(where: { lower.contains($0) }) {
+            return true
+        }
+
+        // Social share related
+        let socialKeywords = [
+            "share on", "compartir en", "share this", "comparte este",
+            "follow us", "siguenos", "like us on", "tweet this"
+        ]
+        if socialKeywords.contains(where: { lower.contains($0) }) {
+            return true
+        }
+
+        // Check for social network mentions in short text (likely share buttons)
+        let socialNetworks = ["facebook", "twitter", "linkedin", "whatsapp", "telegram", "pinterest"]
+        let wordCount = text.split { $0.isWhitespace }.count
+        if wordCount <= 6 {
+            let socialCount = socialNetworks.filter { lower.contains($0) }.count
+            if socialCount >= 2 {
+                return true
+            }
+        }
+
+        // Ad/promo related
+        let adKeywords = ["publicidad", "advertisement", "sponsored", "patrocinado", "promo"]
+        if adKeywords.contains(where: { lower.contains($0) }) {
+            return true
+        }
+
+        return false
     }
 
     private func decodeHTMLEntities(_ text: String) -> String {
@@ -202,6 +403,8 @@ struct ArticleContent {
     let title: String
     let text: String
     let url: String
+    let imageURL: String?
+    let author: String?
 }
 
 enum ExtractionError: LocalizedError {

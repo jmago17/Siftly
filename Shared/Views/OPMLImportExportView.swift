@@ -115,7 +115,20 @@ struct OPMLImportExportView: View {
         case .success(let urls):
             guard let url = urls.first else { return }
 
-            let feeds = OPMLService.importFromOPMLFile(url: url)
+            let accessGranted = url.startAccessingSecurityScopedResource()
+            defer {
+                if accessGranted {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+
+            guard let data = try? Data(contentsOf: url) else {
+                alertMessage = "No se pudo leer el archivo OPML"
+                showingAlert = true
+                return
+            }
+
+            let feeds = OPMLService.importFromOPML(data: data)
 
             if feeds.isEmpty {
                 alertMessage = "No se encontraron feeds en el archivo OPML"
