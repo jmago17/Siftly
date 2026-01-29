@@ -23,6 +23,7 @@ struct NewsListView: View {
     @State private var minScoreFilter: Int = 0
     @State private var searchText = ""
     @State private var showStarredOnly: Bool = false
+    @State private var sortOrder: ArticleSortOrder = .score
     @AppStorage("selectedSmartFeedID") private var selectedSmartFeedIDValue = ""
 
     init(
@@ -82,12 +83,45 @@ struct NewsListView: View {
                     }
 
                     List {
-                        ForEach(filteredDeduplicatedNews) { item in
+                        ForEach(Array(filteredDeduplicatedNews.enumerated()), id: \.element.id) { index, item in
                             UnifiedArticleRow(
                                 newsItem: item,
                                 newsViewModel: newsViewModel,
                                 feedSettings: feedSettings
                             )
+                            .contextMenu {
+                                Button {
+                                    toggleReadStatus(for: item)
+                                } label: {
+                                    Label(
+                                        item.isRead ? "Marcar como no leído" : "Marcar como leído",
+                                        systemImage: item.isRead ? "envelope.badge" : "envelope.open"
+                                    )
+                                }
+
+                                Button {
+                                    toggleFavorite(for: item)
+                                } label: {
+                                    Label(
+                                        item.isFavorite ? "Quitar de favoritos" : "Añadir a favoritos",
+                                        systemImage: item.isFavorite ? "star.slash" : "star"
+                                    )
+                                }
+
+                                Divider()
+
+                                Button {
+                                    markAsReadAbove(index: index)
+                                } label: {
+                                    Label("Marcar anteriores como leídos", systemImage: "arrow.up.circle")
+                                }
+
+                                Button {
+                                    markAsReadBelow(index: index)
+                                } label: {
+                                    Label("Marcar siguientes como leídos", systemImage: "arrow.down.circle")
+                                }
+                            }
                         }
                     }
                     .refreshable {
@@ -98,10 +132,10 @@ struct NewsListView: View {
                         readFilter: $readFilter,
                         showStarredOnly: $showStarredOnly,
                         minScoreFilter: $minScoreFilter,
-                        feedsViewModel: feedsViewModel,
-                        smartFoldersViewModel: smartFoldersViewModel,
-                        smartFeedsViewModel: smartFeedsViewModel,
-                        newsViewModel: newsViewModel
+                        sortOrder: $sortOrder,
+                        onMarkAllAsRead: {
+                            markAllVisibleAsRead()
+                        }
                     )
                 }
             }
@@ -172,6 +206,21 @@ struct NewsListView: View {
                 item.title.lowercased().contains(query)
                 || item.summary.lowercased().contains(query)
                 || item.primarySource.feedName.lowercased().contains(query)
+            }
+        }
+
+        // Apply sort order
+        news = news.sorted { item1, item2 in
+            switch sortOrder {
+            case .score:
+                let score1 = item1.qualityScore?.overallScore ?? 50
+                let score2 = item2.qualityScore?.overallScore ?? 50
+                if score1 != score2 {
+                    return score1 > score2
+                }
+                return (item1.pubDate ?? Date.distantPast) > (item2.pubDate ?? Date.distantPast)
+            case .chronological:
+                return (item1.pubDate ?? Date.distantPast) > (item2.pubDate ?? Date.distantPast)
             }
         }
 
@@ -288,6 +337,53 @@ struct NewsListView: View {
 
     private var favoritesOnly: Bool {
         effectiveSmartFeed?.kind == .favorites
+    }
+
+    // MARK: - Actions
+
+    private func markAllVisibleAsRead() {
+        for item in filteredDeduplicatedNews {
+            for source in item.sources {
+                newsViewModel.markAsRead(source.id, isRead: true, notify: false)
+            }
+        }
+        newsViewModel.objectWillChange.send()
+    }
+
+    private func toggleReadStatus(for item: DeduplicatedNewsItem) {
+        let newStatus = !item.isRead
+        for source in item.sources {
+            newsViewModel.markAsRead(source.id, isRead: newStatus, notify: false)
+        }
+        newsViewModel.objectWillChange.send()
+    }
+
+    private func toggleFavorite(for item: DeduplicatedNewsItem) {
+        let newStatus = !item.isFavorite
+        for source in item.sources {
+            newsViewModel.markAsFavorite(source.id, isFavorite: newStatus, notify: false)
+        }
+        newsViewModel.objectWillChange.send()
+    }
+
+    private func markAsReadAbove(index: Int) {
+        let items = filteredDeduplicatedNews
+        for i in 0..<index {
+            for source in items[i].sources {
+                newsViewModel.markAsRead(source.id, isRead: true, notify: false)
+            }
+        }
+        newsViewModel.objectWillChange.send()
+    }
+
+    private func markAsReadBelow(index: Int) {
+        let items = filteredDeduplicatedNews
+        for i in (index + 1)..<items.count {
+            for source in items[i].sources {
+                newsViewModel.markAsRead(source.id, isRead: true, notify: false)
+            }
+        }
+        newsViewModel.objectWillChange.send()
     }
 }
 

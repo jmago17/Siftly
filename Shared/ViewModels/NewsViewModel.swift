@@ -129,6 +129,7 @@ class NewsViewModel: ObservableObject {
         applyFeedPriorityBoost(to: &processedItems, feedPriorities: feedPriorities)
         
         newsItems = processedItems
+        ImageCacheService.shared.prefetchImages(urlStrings: processedItems.compactMap { $0.imageURL })
         isProcessing = false
     }
 

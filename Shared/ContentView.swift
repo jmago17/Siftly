@@ -10,6 +10,7 @@ struct ContentView: View {
     @StateObject private var newsViewModel = NewsViewModel()
     @StateObject private var smartFoldersViewModel = SmartFoldersViewModel()
     @StateObject private var smartFeedsViewModel = SmartFeedsViewModel()
+    @AppStorage("refreshOnLaunch") private var refreshOnLaunch = true
     @State private var didInitialRefresh = false
 
     var body: some View {
@@ -56,6 +57,7 @@ struct ContentView: View {
         .task {
             guard !didInitialRefresh else { return }
             didInitialRefresh = true
+            guard refreshOnLaunch else { return }
             await refreshOnLaunch()
         }
     }

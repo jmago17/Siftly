@@ -58,42 +58,120 @@ class RSSParser: NSObject {
     }
     
     private func parseDate(_ dateString: String) -> Date? {
-        // Try ISO8601 first
-        let iso8601 = ISO8601DateFormatter()
-        if let date = iso8601.date(from: dateString) {
+        let trimmed = dateString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        // Try ISO8601 first (with various options)
+        let iso8601Full = ISO8601DateFormatter()
+        iso8601Full.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = iso8601Full.date(from: trimmed) {
             return date
         }
 
-        // Try standard date formatters
-        let formatters: [DateFormatter] = [
-            {
-                let df = DateFormatter()
-                df.dateFormat = "EEE, dd MMM yyyy HH:mm:ss Z"
-                df.locale = Locale(identifier: "en_US_POSIX")
-                return df
-            }(),
-            {
-                let df = DateFormatter()
-                df.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-                df.locale = Locale(identifier: "en_US_POSIX")
-                return df
-            }(),
-            {
-                let df = DateFormatter()
-                df.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-                df.locale = Locale(identifier: "en_US_POSIX")
-                return df
-            }()
-        ]
+        let iso8601Basic = ISO8601DateFormatter()
+        iso8601Basic.formatOptions = [.withInternetDateTime]
+        if let date = iso8601Basic.date(from: trimmed) {
+            return date
+        }
+
+        // Create formatters lazily and cache them
+        let formatters: [DateFormatter] = Self.dateFormatters
 
         for formatter in formatters {
-            if let date = formatter.date(from: dateString) {
+            if let date = formatter.date(from: trimmed) {
                 return date
+            }
+        }
+
+        // Try removing timezone abbreviations like "GMT", "UTC", "EST" etc. and retry
+        let withoutTZAbbrev = trimmed.replacingOccurrences(
+            of: "\\s+(GMT|UTC|EST|EDT|CST|CDT|MST|MDT|PST|PDT|BST|CET|CEST)\\s*$",
+            with: "",
+            options: .regularExpression
+        )
+        if withoutTZAbbrev != trimmed {
+            for formatter in formatters {
+                if let date = formatter.date(from: withoutTZAbbrev) {
+                    return date
+                }
             }
         }
 
         return nil
     }
+
+    private static let dateFormatters: [DateFormatter] = {
+        let formats = [
+            // RFC 2822 (common in RSS)
+            "EEE, dd MMM yyyy HH:mm:ss Z",
+            "EEE, dd MMM yyyy HH:mm:ss zzz",
+            "EEE, d MMM yyyy HH:mm:ss Z",
+            "EEE, d MMM yyyy HH:mm:ss zzz",
+            "dd MMM yyyy HH:mm:ss Z",
+            "d MMM yyyy HH:mm:ss Z",
+
+            // RFC 2822 without seconds
+            "EEE, dd MMM yyyy HH:mm Z",
+            "EEE, d MMM yyyy HH:mm Z",
+
+            // ISO 8601 variations
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "yyyy-MM-dd'T'HH:mm:ssZZZZZ",
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mmZ",
+            "yyyy-MM-dd'T'HH:mm",
+            "yyyy-MM-dd HH:mm:ss Z",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd",
+
+            // Common variations
+            "dd/MM/yyyy HH:mm:ss",
+            "dd/MM/yyyy HH:mm",
+            "dd/MM/yyyy",
+            "MM/dd/yyyy HH:mm:ss",
+            "MM/dd/yyyy",
+            "yyyy/MM/dd HH:mm:ss",
+            "yyyy/MM/dd",
+
+            // European formats
+            "dd-MM-yyyy HH:mm:ss",
+            "dd-MM-yyyy",
+            "d-M-yyyy HH:mm:ss",
+            "d-M-yyyy",
+
+            // Spanish formats
+            "dd 'de' MMMM 'de' yyyy",
+            "d 'de' MMMM 'de' yyyy",
+            "dd 'de' MMMM 'de' yyyy HH:mm",
+
+            // Atom date format
+            "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
+            "yyyy-MM-dd'T'HH:mm:ssxxx",
+
+            // Unix timestamp string (rare but happens)
+            "EEE MMM dd HH:mm:ss Z yyyy",
+            "EEE MMM d HH:mm:ss Z yyyy",
+        ]
+
+        return formats.flatMap { format -> [DateFormatter] in
+            // Create formatter for English locale (most common)
+            let enFormatter = DateFormatter()
+            enFormatter.dateFormat = format
+            enFormatter.locale = Locale(identifier: "en_US_POSIX")
+            enFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+
+            // Create formatter for Spanish locale
+            let esFormatter = DateFormatter()
+            esFormatter.dateFormat = format
+            esFormatter.locale = Locale(identifier: "es_ES")
+            esFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+
+            return [enFormatter, esFormatter]
+        }
+    }()
     
     private func cleanHTML(_ string: String) -> String {
         // Use the comprehensive text cleaner for better results

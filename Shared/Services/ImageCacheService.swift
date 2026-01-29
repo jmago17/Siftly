@@ -68,6 +68,22 @@ final class ImageCacheService {
         return result
     }
 
+    func prefetchImages(urlStrings: [String]) {
+        let uniqueURLs = Set(urlStrings.compactMap { url in
+            let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        })
+
+        for urlString in uniqueURLs {
+            if cache.object(forKey: urlString as NSString) != nil { continue }
+            if loadingTasks[urlString] != nil { continue }
+
+            Task { [weak self] in
+                _ = await self?.loadImage(from: urlString)
+            }
+        }
+    }
+
     func clearCache() {
         cache.removeAllObjects()
     }
@@ -87,6 +103,7 @@ struct CachedAsyncImage: View {
     let urlString: String?
     let width: CGFloat
     let height: CGFloat
+    var cornerRadius: CGFloat = 8
 
     @State private var image: Image?
     @State private var isLoading = false
@@ -111,7 +128,7 @@ struct CachedAsyncImage: View {
         }
         .frame(width: width, height: height)
         .clipped()
-        .cornerRadius(8)
+        .cornerRadius(cornerRadius)
         .task(id: urlString) {
             await loadImage()
         }

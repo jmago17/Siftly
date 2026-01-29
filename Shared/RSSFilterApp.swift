@@ -14,6 +14,9 @@ struct RSSRAIderApp: App {
         if UserDefaults.standard.object(forKey: "openInAppBrowser") == nil {
             UserDefaults.standard.set(true, forKey: "openInAppBrowser")
         }
+        if UserDefaults.standard.object(forKey: "refreshOnLaunch") == nil {
+            UserDefaults.standard.set(true, forKey: "refreshOnLaunch")
+        }
 
         #if DEBUG
         if ProcessInfo.processInfo.environment["ARTICLE_TEXT_TESTS"] == "1" {

@@ -55,11 +55,7 @@ struct FeedNewsView: View {
             ArticleListBottomBar(
                 readFilter: $readFilter,
                 showStarredOnly: $showStarredOnly,
-                minScoreFilter: $minScoreFilter,
-                feedsViewModel: feedsViewModel,
-                smartFoldersViewModel: smartFoldersViewModel,
-                smartFeedsViewModel: smartFeedsViewModel,
-                newsViewModel: newsViewModel
+                minScoreFilter: $minScoreFilter
             )
         }
         .navigationTitle(feed.name)

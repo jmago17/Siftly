@@ -22,6 +22,7 @@ struct SettingsView: View {
     @State private var feedbinAlertMessage = ""
     @State private var showingFeedbinAlert = false
     @AppStorage("feedSource") private var feedSourceRaw = FeedSource.rss.rawValue
+    @AppStorage("refreshOnLaunch") private var refreshOnLaunch = true
 
     init(newsViewModel: NewsViewModel, smartFoldersViewModel: SmartFoldersViewModel, smartFeedsViewModel: SmartFeedsViewModel, feedsViewModel: FeedsViewModel) {
         self.newsViewModel = newsViewModel
@@ -184,6 +185,16 @@ struct SettingsView: View {
                     Text("Feeds")
                 } footer: {
                     Text("Exporta tus feeds a formato OPML o importa feeds desde otros lectores RSS")
+                }
+
+                Section {
+                    Toggle(isOn: $refreshOnLaunch) {
+                        Label("Actualizar al abrir", systemImage: "arrow.clockwise")
+                    }
+                } header: {
+                    Text("Actualización")
+                } footer: {
+                    Text("Cuando está activado, la app refresca tus feeds al abrir. Si está desactivado, tendrás que actualizar manualmente.")
                 }
 
                 // Smart Folders Management

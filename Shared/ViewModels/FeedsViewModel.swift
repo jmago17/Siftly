@@ -138,6 +138,13 @@ class FeedsViewModel: ObservableObject {
         }
     }
 
+    func toggleFeedMuted(id: UUID) {
+        if let index = feeds.firstIndex(where: { $0.id == id }) {
+            feeds[index].isMutedInNews.toggle()
+            saveToDisk()
+        }
+    }
+
     func setFeedOpenInSafariReader(id: UUID, open: Bool) {
         if let index = feeds.firstIndex(where: { $0.id == id }) {
             feeds[index].openInSafariReader = open

@@ -16,6 +16,7 @@ struct NavigationMenuSheet: View {
     @State private var smartFoldersExpanded = true
     @State private var smartFeedsExpanded = true
     @State private var smartFeedToEdit: SmartFeed?
+    @State private var feedToEdit: RSSFeed?
     @AppStorage("selectedSmartFeedID") private var selectedSmartFeedIDValue = ""
     var showsCloseButton: Bool = true
 
@@ -31,6 +32,9 @@ struct NavigationMenuSheet: View {
                 }
                 .scrollContentBackground(.hidden)
                 .listStyle(.insetGrouped)
+                .refreshable {
+                    await refreshFeeds()
+                }
             }
             .navigationTitle("Navegación")
             .navigationBarTitleDisplayMode(.inline)
@@ -64,6 +68,12 @@ struct NavigationMenuSheet: View {
                     feedsViewModel: feedsViewModel,
                     smartFeed: smartFeed,
                     allowsEmptyFeeds: smartFeed.kind == .favorites
+                )
+            }
+            .sheet(item: $feedToEdit) { feed in
+                EditFeedNameView(
+                    feed: feed,
+                    feedsViewModel: feedsViewModel
                 )
             }
             #else
@@ -105,8 +115,25 @@ struct NavigationMenuSheet: View {
                     allowsEmptyFeeds: smartFeed.kind == .favorites
                 )
             }
+            .sheet(item: $feedToEdit) { feed in
+                EditFeedNameView(
+                    feed: feed,
+                    feedsViewModel: feedsViewModel
+                )
+            }
             #endif
         }
+    }
+
+    private func markFeedAsRead(_ feed: RSSFeed) {
+        for item in newsViewModel.newsItems where item.feedID == feed.id {
+            newsViewModel.markAsRead(item.id, isRead: true, notify: false)
+        }
+        newsViewModel.objectWillChange.send()
+    }
+
+    private func toggleFeedMuted(_ feed: RSSFeed) {
+        feedsViewModel.toggleFeedMuted(id: feed.id)
     }
 
     private var feedsSection: some View {
@@ -137,6 +164,51 @@ struct NavigationMenuSheet: View {
                                             FeedIconView(urlString: feed.url, size: 20)
                                             Text(feed.name)
                                                 .lineLimit(1)
+                                        }
+                                    }
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button(role: .destructive) {
+                                            feedsViewModel.deleteFeed(id: feed.id)
+                                        } label: {
+                                            Label("Eliminar", systemImage: "trash")
+                                        }
+                                    }
+                                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                        Button {
+                                            markFeedAsRead(feed)
+                                        } label: {
+                                            Label("Marcar leído", systemImage: "checkmark.circle")
+                                        }
+                                        .tint(.blue)
+                                    }
+                                    .contextMenu {
+                                        Button {
+                                            markFeedAsRead(feed)
+                                        } label: {
+                                            Label("Marcar todo como leído", systemImage: "checkmark.circle")
+                                        }
+
+                                        Button {
+                                            feedToEdit = feed
+                                        } label: {
+                                            Label("Editar nombre", systemImage: "pencil")
+                                        }
+
+                                        Button {
+                                            toggleFeedMuted(feed)
+                                        } label: {
+                                            Label(
+                                                feed.isMutedInNews ? "Mostrar en noticias" : "Silenciar en noticias",
+                                                systemImage: feed.isMutedInNews ? "bell" : "bell.slash"
+                                            )
+                                        }
+
+                                        Divider()
+
+                                        Button(role: .destructive) {
+                                            feedsViewModel.deleteFeed(id: feed.id)
+                                        } label: {
+                                            Label("Eliminar feed", systemImage: "trash")
                                         }
                                     }
                                 }
@@ -217,6 +289,7 @@ struct NavigationMenuSheet: View {
                         smartFoldersViewModel: smartFoldersViewModel,
                         smartFeedsViewModel: smartFeedsViewModel
                     )
+                    .onAppear { selectedSmartFeedIDValue = "" }
                 } label: {
                     SmartFeedRowView(
                         name: "Todos los feeds",
@@ -224,9 +297,6 @@ struct NavigationMenuSheet: View {
                         iconSystemName: "tray.full"
                     )
                 }
-                .simultaneousGesture(TapGesture().onEnded {
-                    selectedSmartFeedIDValue = ""
-                })
 
                 NavigationLink {
                     NewsListView(
@@ -236,6 +306,7 @@ struct NavigationMenuSheet: View {
                         smartFeedsViewModel: smartFeedsViewModel,
                         smartFeedOverride: favoritesSmartFeed
                     )
+                    .onAppear { selectedSmartFeedIDValue = favoritesSmartFeed.id.uuidString }
                 } label: {
                     SmartFeedRowView(
                         name: favoritesSmartFeed.name,
@@ -243,9 +314,6 @@ struct NavigationMenuSheet: View {
                         iconSystemName: favoritesSmartFeed.iconSystemName
                     )
                 }
-                .simultaneousGesture(TapGesture().onEnded {
-                    selectedSmartFeedIDValue = favoritesSmartFeed.id.uuidString
-                })
                 .contextMenu {
                     Button {
                         smartFeedToEdit = favoritesSmartFeed
@@ -268,6 +336,7 @@ struct NavigationMenuSheet: View {
                                 smartFeedsViewModel: smartFeedsViewModel,
                                 smartFeedOverride: smartFeed
                             )
+                            .onAppear { selectedSmartFeedIDValue = smartFeed.id.uuidString }
                         } label: {
                             SmartFeedRowView(
                                 name: smartFeed.name,
@@ -275,9 +344,6 @@ struct NavigationMenuSheet: View {
                                 iconSystemName: smartFeed.iconSystemName
                             )
                         }
-                        .simultaneousGesture(TapGesture().onEnded {
-                            selectedSmartFeedIDValue = smartFeed.id.uuidString
-                        })
                         .contextMenu {
                             Button {
                                 smartFeedToEdit = smartFeed
@@ -349,6 +415,18 @@ struct NavigationMenuSheet: View {
 
     private var favoritesFeedCount: Int {
         favoritesSmartFeed.feedIDs.isEmpty ? feedsViewModel.feeds.count : favoritesSmartFeed.feedIDs.count
+    }
+
+    private func refreshFeeds() async {
+        let newsItems = await feedsViewModel.fetchAllFeeds()
+        guard !newsItems.isEmpty else { return }
+
+        await newsViewModel.processNewsItems(
+            newsItems,
+            smartFolders: smartFoldersViewModel.smartFolders,
+            feeds: feedsViewModel.feeds
+        )
+        smartFoldersViewModel.updateMatchCounts(newsItems: newsViewModel.newsItems)
     }
 
     private var feedFolderSections: [NavMenuFeedFolderSection] {
@@ -460,11 +538,7 @@ struct SmartFolderNewsView: View {
             ArticleListBottomBar(
                 readFilter: $readFilter,
                 showStarredOnly: $showStarredOnly,
-                minScoreFilter: $minScoreFilter,
-                feedsViewModel: feedsViewModel,
-                smartFoldersViewModel: smartFoldersViewModel,
-                smartFeedsViewModel: smartFeedsViewModel,
-                newsViewModel: newsViewModel
+                minScoreFilter: $minScoreFilter
             )
         }
         .navigationTitle(folder.name)

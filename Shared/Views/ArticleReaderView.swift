@@ -80,24 +80,16 @@ struct ArticleReaderView: View {
                     } else {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 16) {
-                                if let imageURLString = articleContent?.imageURL,
-                                   let imageURL = URL(string: imageURLString) {
-                                    AsyncImage(url: imageURL) { phase in
-                                        switch phase {
-                                        case .success(let image):
-                                            image
-                                                .resizable()
-                                                .scaledToFill()
-                                        case .failure:
-                                            Color.gray.opacity(0.2)
-                                        default:
-                                            ProgressView()
-                                        }
+                                if let headerImageURL {
+                                    GeometryReader { proxy in
+                                        CachedAsyncImage(
+                                            urlString: headerImageURL,
+                                            width: proxy.size.width,
+                                            height: 200,
+                                            cornerRadius: 12
+                                        )
                                     }
                                     .frame(height: 200)
-                                    .frame(maxWidth: .infinity)
-                                    .clipped()
-                                    .cornerRadius(12)
                                 }
 
                                 Text(titleText)
@@ -149,9 +141,6 @@ struct ArticleReaderView: View {
                         .frame(maxWidth: .infinity)
                     }
 
-                    Divider()
-                        .frame(height: 40)
-
                     Button {
                         openInSafari()
                     } label: {
@@ -163,9 +152,6 @@ struct ArticleReaderView: View {
                         }
                         .frame(maxWidth: .infinity)
                     }
-
-                    Divider()
-                        .frame(height: 40)
 
                     Button {
                         shareArticle()
@@ -179,9 +165,6 @@ struct ArticleReaderView: View {
                         .frame(maxWidth: .infinity)
                     }
 
-                    Divider()
-                        .frame(height: 40)
-
                     Button {
                         showingAISearch = true
                     } label: {
@@ -194,8 +177,16 @@ struct ArticleReaderView: View {
                         .frame(maxWidth: .infinity)
                     }
                 }
-                .padding(.vertical, 8)
-                .background(.regularMaterial)
+                .foregroundStyle(.primary)
+                .padding(.vertical, 12)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                )
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
                 #endif
             }
             .navigationTitle(titleText)
@@ -312,8 +303,8 @@ struct ArticleReaderView: View {
                             title: extracted.title,
                             text: extracted.body,
                             url: articleURL.absoluteString,
-                            imageURL: nil,
-                            author: nil
+                            imageURL: newsItem.imageURL,
+                            author: newsItem.author
                         )
                         isLoading = false
                         loadAISummaryIfNeeded()
@@ -322,7 +313,19 @@ struct ArticleReaderView: View {
                 }
             }
 
-            let content = try await HTMLTextExtractor.shared.extractText(from: url)
+            var content = try await HTMLTextExtractor.shared.extractText(from: url)
+            // Preserve image URL from newsItem if extractor didn't find one
+            if content.imageURL?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true,
+               let newsItemImage = newsItem?.imageURL,
+               !newsItemImage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                content = ArticleContent(
+                    title: content.title,
+                    text: content.text,
+                    url: content.url,
+                    imageURL: newsItemImage,
+                    author: content.author ?? newsItem?.author
+                )
+            }
             await MainActor.run {
                 articleContent = content
                 isLoading = false
@@ -597,6 +600,18 @@ struct ArticleReaderView: View {
             return cleanBody
         }
         return ""
+    }
+
+    private var headerImageURL: String? {
+        if let imageURL = articleContent?.imageURL,
+           !imageURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return imageURL
+        }
+        if let imageURL = newsItem?.imageURL,
+           !imageURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return imageURL
+        }
+        return nil
     }
 
     private var aiSummaryBox: some View {
