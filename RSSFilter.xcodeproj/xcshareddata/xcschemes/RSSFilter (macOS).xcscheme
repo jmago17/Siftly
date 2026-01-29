@@ -14,8 +14,8 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "MACOS_TARGET"
-               BuildableName = "RSSFilter.app"
+               BlueprintIdentifier = "A0100210"
+               BuildableName = "RSS RAIder.app"
                BlueprintName = "RSSFilter (macOS)"
                ReferencedContainer = "container:RSSFilter.xcodeproj">
             </BuildableReference>
@@ -43,8 +43,8 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "MACOS_TARGET"
-            BuildableName = "RSSFilter.app"
+            BlueprintIdentifier = "A0100210"
+            BuildableName = "RSS RAIder.app"
             BlueprintName = "RSSFilter (macOS)"
             ReferencedContainer = "container:RSSFilter.xcodeproj">
          </BuildableReference>
@@ -60,8 +60,8 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "MACOS_TARGET"
-            BuildableName = "RSSFilter.app"
+            BlueprintIdentifier = "A0100210"
+            BuildableName = "RSS RAIder.app"
             BlueprintName = "RSSFilter (macOS)"
             ReferencedContainer = "container:RSSFilter.xcodeproj">
          </BuildableReference>
