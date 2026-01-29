@@ -20,7 +20,7 @@ struct FavoritesView: View {
     @State private var showStarredOnly: Bool = true // Always true for Favorites
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottom) {
             if filteredFavorites.isEmpty {
                 ContentUnavailableView {
                     Label("No hay favoritos", systemImage: "star")
@@ -69,6 +69,12 @@ struct FavoritesView: View {
                                 feedSettings: feedSettings
                             )
                         }
+
+                        // Bottom padding to account for floating bar
+                        Color.clear
+                            .frame(height: 70)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     }
                 }
             }

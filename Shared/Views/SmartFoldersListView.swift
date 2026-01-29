@@ -20,7 +20,7 @@ struct SmartFoldersListView: View {
     @AppStorage("smartFoldersIntroSeen") private var introSeen = false
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottom) {
             if smartFoldersViewModel.smartFolders.isEmpty {
                 ContentUnavailableView {
                     Label("No hay carpetas inteligentes", systemImage: "folder")
@@ -50,6 +50,12 @@ struct SmartFoldersListView: View {
                             smartFoldersViewModel.deleteFolder(id: smartFoldersViewModel.smartFolders[index].id)
                         }
                     }
+
+                    // Bottom padding to account for floating bar
+                    Color.clear
+                        .frame(height: 70)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                 }
             }
 

@@ -25,7 +25,7 @@ struct FeedNewsView: View {
     @State private var sortOrder: ArticleSortOrder = .score
 
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottom) {
             if filteredNews.isEmpty {
                 ContentUnavailableView {
                     Label("No hay noticias", systemImage: "newspaper")
@@ -85,6 +85,12 @@ struct FeedNewsView: View {
                             }
                         }
                     }
+
+                    // Bottom padding to account for floating bar
+                    Color.clear
+                        .frame(height: 70)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                 }
                 .refreshable {
                     await refreshFeed()
