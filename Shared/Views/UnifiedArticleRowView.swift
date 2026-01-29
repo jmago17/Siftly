@@ -28,98 +28,99 @@ struct UnifiedArticleRowView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Top row: Feed info on left, time + score on right
-            HStack(alignment: .center, spacing: 8) {
-                // Feed logo placeholder (first letter) + feed name
-                HStack(spacing: 6) {
-                    feedLogoView
-
-                    if newsItem.hasDuplicates {
-                        Button {
-                            onSourceSelect?()
-                        } label: {
-                            HStack(spacing: 4) {
-                                Text("\(newsItem.sources.count) fuentes")
-                                    .font(.caption)
-                                Image(systemName: "chevron.down")
-                                    .font(.caption2)
-                            }
-                            .foregroundColor(.blue)
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        Text(newsItem.primarySource.feedName)
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-                    }
-                }
-
-                Spacer()
-
-                // Time + Score
-                HStack(spacing: 8) {
-                    if let pubDate = newsItem.pubDate {
-                        Text(relativeTimeString(from: pubDate))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    if let score = newsItem.qualityScore {
-                        ScoreBadge(score: score.overallScore)
-                    }
-                }
-            }
-
-            // Main content: Title + Summary on left, Image on right
-            HStack(alignment: .top, spacing: 12) {
-                // Title + Summary
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(newsItem.title)
-                        .font(.subheadline)
-                        .fontWeight(newsItem.isRead ? .regular : .semibold)
-                        .foregroundColor(newsItem.isRead ? .secondary : .primary)
-                        .lineLimit(3)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    if !newsItem.summary.isEmpty {
-                        Text(cleanSummary(newsItem.summary))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                // Thumbnail image on the right
-                if let imageURL = newsItem.imageURL {
-                    CachedAsyncImage(urlString: imageURL, width: 80, height: 80)
-                }
-            }
-
-            // Warning badges (only if present)
-            if hasWarningBadges {
-                HStack(spacing: 6) {
-                    if newsItem.qualityScore?.isClickbait == true {
-                        WarningBadge(text: "Clickbait", color: .orange)
-                    }
-                    if newsItem.qualityScore?.isSpam == true {
-                        WarningBadge(text: "Spam", color: .red)
-                    }
-                    if newsItem.qualityScore?.isAdvertisement == true {
-                        WarningBadge(text: "Anuncio", color: .purple)
-                    }
-                }
-            }
-        }
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity)
-        .contentShape(Rectangle())
-        .onTapGesture {
+        Button {
             onTap()
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                // Top row: Feed info on left, time + score on right
+                HStack(alignment: .center, spacing: 8) {
+                    // Feed logo placeholder (first letter) + feed name
+                    HStack(spacing: 6) {
+                        feedLogoView
+
+                        if newsItem.hasDuplicates {
+                            Button {
+                                onSourceSelect?()
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Text("\(newsItem.sources.count) fuentes")
+                                        .font(.caption)
+                                    Image(systemName: "chevron.down")
+                                        .font(.caption2)
+                                }
+                                .foregroundColor(.blue)
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            Text(newsItem.primarySource.feedName)
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                        }
+                    }
+
+                    Spacer()
+
+                    // Time + Score
+                    HStack(spacing: 8) {
+                        if let pubDate = newsItem.pubDate {
+                            Text(relativeTimeString(from: pubDate))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        if let score = newsItem.qualityScore {
+                            ScoreBadge(score: score.overallScore)
+                        }
+                    }
+                }
+
+                // Main content: Title + Summary on left, Image on right
+                HStack(alignment: .top, spacing: 12) {
+                    // Title + Summary
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(newsItem.title)
+                            .font(.subheadline)
+                            .fontWeight(newsItem.isRead ? .regular : .semibold)
+                            .foregroundColor(newsItem.isRead ? .secondary : .primary)
+                            .lineLimit(3)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        if !newsItem.summary.isEmpty {
+                            Text(cleanSummary(newsItem.summary))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(2)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    // Thumbnail image on the right
+                    if let imageURL = newsItem.imageURL {
+                        CachedAsyncImage(urlString: imageURL, width: 80, height: 80)
+                    }
+                }
+
+                // Warning badges (only if present)
+                if hasWarningBadges {
+                    HStack(spacing: 6) {
+                        if newsItem.qualityScore?.isClickbait == true {
+                            WarningBadge(text: "Clickbait", color: .orange)
+                        }
+                        if newsItem.qualityScore?.isSpam == true {
+                            WarningBadge(text: "Spam", color: .red)
+                        }
+                        if newsItem.qualityScore?.isAdvertisement == true {
+                            WarningBadge(text: "Anuncio", color: .purple)
+                        }
+                    }
+                }
+            }
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
         }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Subviews
@@ -346,83 +347,84 @@ struct UnifiedNewsItemRow: View {
     let onTap: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Top row: Feed info on left, time + score on right
-            HStack(alignment: .center, spacing: 8) {
-                // Feed logo placeholder (first letter) + feed name
-                HStack(spacing: 6) {
-                    feedLogoView
-
-                    Text(newsItem.feedName)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                }
-
-                Spacer()
-
-                // Time + Score
-                HStack(spacing: 8) {
-                    if let pubDate = newsItem.pubDate {
-                        Text(relativeTimeString(from: pubDate))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-
-                    if let score = newsItem.qualityScore {
-                        ScoreBadge(score: score.overallScore)
-                    }
-                }
-            }
-
-            // Main content: Title + Summary on left, Image on right
-            HStack(alignment: .top, spacing: 12) {
-                // Title + Summary
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(newsItem.title)
-                        .font(.subheadline)
-                        .fontWeight(newsItem.isRead ? .regular : .semibold)
-                        .foregroundColor(newsItem.isRead ? .secondary : .primary)
-                        .lineLimit(3)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    if !newsItem.summary.isEmpty {
-                        Text(cleanSummary(newsItem.summary))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                // Thumbnail image on the right
-                if let imageURL = newsItem.imageURL {
-                    CachedAsyncImage(urlString: imageURL, width: 80, height: 80)
-                }
-            }
-
-            // Warning badges (only if present)
-            if hasWarningBadges {
-                HStack(spacing: 6) {
-                    if newsItem.qualityScore?.isClickbait == true {
-                        WarningBadge(text: "Clickbait", color: .orange)
-                    }
-                    if newsItem.qualityScore?.isSpam == true {
-                        WarningBadge(text: "Spam", color: .red)
-                    }
-                    if newsItem.qualityScore?.isAdvertisement == true {
-                        WarningBadge(text: "Anuncio", color: .purple)
-                    }
-                }
-            }
-        }
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity)
-        .contentShape(Rectangle())
-        .onTapGesture {
+        Button {
             onTap()
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                // Top row: Feed info on left, time + score on right
+                HStack(alignment: .center, spacing: 8) {
+                    // Feed logo placeholder (first letter) + feed name
+                    HStack(spacing: 6) {
+                        feedLogoView
+
+                        Text(newsItem.feedName)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                    }
+
+                    Spacer()
+
+                    // Time + Score
+                    HStack(spacing: 8) {
+                        if let pubDate = newsItem.pubDate {
+                            Text(relativeTimeString(from: pubDate))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        if let score = newsItem.qualityScore {
+                            ScoreBadge(score: score.overallScore)
+                        }
+                    }
+                }
+
+                // Main content: Title + Summary on left, Image on right
+                HStack(alignment: .top, spacing: 12) {
+                    // Title + Summary
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(newsItem.title)
+                            .font(.subheadline)
+                            .fontWeight(newsItem.isRead ? .regular : .semibold)
+                            .foregroundColor(newsItem.isRead ? .secondary : .primary)
+                            .lineLimit(3)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        if !newsItem.summary.isEmpty {
+                            Text(cleanSummary(newsItem.summary))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(2)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    // Thumbnail image on the right
+                    if let imageURL = newsItem.imageURL {
+                        CachedAsyncImage(urlString: imageURL, width: 80, height: 80)
+                    }
+                }
+
+                // Warning badges (only if present)
+                if hasWarningBadges {
+                    HStack(spacing: 6) {
+                        if newsItem.qualityScore?.isClickbait == true {
+                            WarningBadge(text: "Clickbait", color: .orange)
+                        }
+                        if newsItem.qualityScore?.isSpam == true {
+                            WarningBadge(text: "Spam", color: .red)
+                        }
+                        if newsItem.qualityScore?.isAdvertisement == true {
+                            WarningBadge(text: "Anuncio", color: .purple)
+                        }
+                    }
+                }
+            }
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
         }
+        .buttonStyle(.plain)
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             Button {
                 toggleFavorite()
