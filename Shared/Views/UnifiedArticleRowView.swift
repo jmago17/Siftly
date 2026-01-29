@@ -73,13 +73,8 @@ struct UnifiedArticleRowView: View {
                 }
             }
 
-            // Main content: Image on left, Title + Summary on right
+            // Main content: Title + Summary on left, Image on right
             HStack(alignment: .top, spacing: 12) {
-                // Thumbnail image
-                if let imageURL = newsItem.imageURL {
-                    CachedAsyncImage(urlString: imageURL, width: 80, height: 80)
-                }
-
                 // Title + Summary
                 VStack(alignment: .leading, spacing: 6) {
                     Text(newsItem.title)
@@ -95,6 +90,12 @@ struct UnifiedArticleRowView: View {
                             .foregroundColor(.secondary)
                             .lineLimit(2)
                     }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Thumbnail image on the right
+                if let imageURL = newsItem.imageURL {
+                    CachedAsyncImage(urlString: imageURL, width: 80, height: 80)
                 }
             }
 
@@ -114,6 +115,7 @@ struct UnifiedArticleRowView: View {
             }
         }
         .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()
@@ -125,18 +127,25 @@ struct UnifiedArticleRowView: View {
     @ViewBuilder
     private var feedLogoView: some View {
         let feedName = newsItem.primarySource.feedName
-        let initial = String(feedName.prefix(1)).uppercased()
-        let color = colorForFeed(feedName)
+        let feedID = newsItem.primarySource.feedID
+        let logoURL = feedSettings[feedID]?.logoURL
 
-        ZStack {
-            Circle()
-                .fill(color.opacity(0.2))
-            Text(initial)
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundColor(color)
+        if let logoURL = logoURL {
+            CachedAsyncImage(urlString: logoURL, width: 22, height: 22, cornerRadius: 11)
+        } else {
+            let initial = String(feedName.prefix(1)).uppercased()
+            let color = colorForFeed(feedName)
+
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.2))
+                Text(initial)
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundColor(color)
+            }
+            .frame(width: 22, height: 22)
         }
-        .frame(width: 22, height: 22)
     }
 
     // MARK: - Helpers
@@ -367,13 +376,8 @@ struct UnifiedNewsItemRow: View {
                 }
             }
 
-            // Main content: Image on left, Title + Summary on right
+            // Main content: Title + Summary on left, Image on right
             HStack(alignment: .top, spacing: 12) {
-                // Thumbnail image
-                if let imageURL = newsItem.imageURL {
-                    CachedAsyncImage(urlString: imageURL, width: 80, height: 80)
-                }
-
                 // Title + Summary
                 VStack(alignment: .leading, spacing: 6) {
                     Text(newsItem.title)
@@ -389,6 +393,12 @@ struct UnifiedNewsItemRow: View {
                             .foregroundColor(.secondary)
                             .lineLimit(2)
                     }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                // Thumbnail image on the right
+                if let imageURL = newsItem.imageURL {
+                    CachedAsyncImage(urlString: imageURL, width: 80, height: 80)
                 }
             }
 
@@ -408,6 +418,7 @@ struct UnifiedNewsItemRow: View {
             }
         }
         .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
         .onTapGesture {
             onTap()
@@ -440,18 +451,24 @@ struct UnifiedNewsItemRow: View {
 
     @ViewBuilder
     private var feedLogoView: some View {
-        let initial = String(newsItem.feedName.prefix(1)).uppercased()
-        let color = colorForFeed(newsItem.feedName)
+        let logoURL = feedSettings[newsItem.feedID]?.logoURL
 
-        ZStack {
-            Circle()
-                .fill(color.opacity(0.2))
-            Text(initial)
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundColor(color)
+        if let logoURL = logoURL {
+            CachedAsyncImage(urlString: logoURL, width: 22, height: 22, cornerRadius: 11)
+        } else {
+            let initial = String(newsItem.feedName.prefix(1)).uppercased()
+            let color = colorForFeed(newsItem.feedName)
+
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.2))
+                Text(initial)
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundColor(color)
+            }
+            .frame(width: 22, height: 22)
         }
-        .frame(width: 22, height: 22)
     }
 
     // MARK: - Helpers

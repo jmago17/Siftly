@@ -133,6 +133,8 @@
 		FFC3CB5F96094F4AB1D56518 /* TextCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D82C9A780834403A5A22866 /* TextCleaner.swift */; };
 		DATEEXT0001IOS00000000001 /* DateExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DATEEXT0001REF00000000001 /* DateExtractor.swift */; };
 		DATEEXT0001MAC00000000001 /* DateExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DATEEXT0001REF00000000001 /* DateExtractor.swift */; };
+		FEEDMETA001IOS0000000001 /* FeedMetadataExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEEDMETA001REF0000000001 /* FeedMetadataExtractor.swift */; };
+		FEEDMETA001MAC0000000001 /* FeedMetadataExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEEDMETA001REF0000000001 /* FeedMetadataExtractor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -162,6 +164,7 @@
 /* Begin PBXFileReference section */
 		0D82C9A780834403A5A22866 /* TextCleaner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TextCleaner.swift; sourceTree = "<group>"; };
 		DATEEXT0001REF00000000001 /* DateExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DateExtractor.swift; sourceTree = "<group>"; };
+		FEEDMETA001REF0000000001 /* FeedMetadataExtractor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedMetadataExtractor.swift; sourceTree = "<group>"; };
 		107C7991EFBF4524816A7A49 /* cookie_banner.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = cookie_banner.html; sourceTree = "<group>"; };
 		12119552BABDBC77FFEB55A8 /* RSSFilterWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RSSFilterWidgets.swift; sourceTree = "<group>"; };
 		1F42144FD34A91295C64E1C7 /* FeedbinDebugView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedbinDebugView.swift; sourceTree = "<group>"; };
@@ -339,6 +342,7 @@
 				AF63CF640EB74B609EAEB14B /* TitleCleaner.swift */,
 				0D82C9A780834403A5A22866 /* TextCleaner.swift */,
 				DATEEXT0001REF00000000001 /* DateExtractor.swift */,
+				FEEDMETA001REF0000000001 /* FeedMetadataExtractor.swift */,
 				6A74E204AB324A7284229E32 /* ArticleTextExtractorTestHarness.swift */,
 			);
 			path = Services;
@@ -623,6 +627,7 @@
 				A9D607682F2A72F600591DC6 /* UnifiedArticleRowView.swift in Sources */,
 				80D99DF980264B68840B5976 /* TextCleaner.swift in Sources */,
 				DATEEXT0001IOS00000000001 /* DateExtractor.swift in Sources */,
+				FEEDMETA001IOS0000000001 /* FeedMetadataExtractor.swift in Sources */,
 				67F1DC94B7D04A5196152EB1 /* ArticleTextExtractorTestHarness.swift in Sources */,
 				E6251229511975335E4CFCA1 /* TextReaderView.swift in Sources */,
 				ABC12345678901234567890A /* ArticleListBottomBar.swift in Sources */,
@@ -687,6 +692,7 @@
 				A9D607672F2A72F600591DC6 /* UnifiedArticleRowView.swift in Sources */,
 				FFC3CB5F96094F4AB1D56518 /* TextCleaner.swift in Sources */,
 				DATEEXT0001MAC00000000001 /* DateExtractor.swift in Sources */,
+				FEEDMETA001MAC0000000001 /* FeedMetadataExtractor.swift in Sources */,
 				1FC1791AE2E64E738F3F09A9 /* ArticleTextExtractorTestHarness.swift in Sources */,
 				1613D35C9FD6BD2F6F2E5372 /* TextReaderView.swift in Sources */,
 				ABC12345678901234567890B /* ArticleListBottomBar.swift in Sources */,

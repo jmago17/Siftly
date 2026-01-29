@@ -16,8 +16,9 @@ struct RSSFeed: Codable, Identifiable {
     var isMutedInNews: Bool
     var openInSafariReader: Bool
     var showImagesInList: Bool
+    var logoURL: String?
 
-    init(name: String, url: String) {
+    init(name: String, url: String, logoURL: String? = nil) {
         self.id = UUID()
         self.name = name
         self.url = url
@@ -28,6 +29,7 @@ struct RSSFeed: Codable, Identifiable {
         self.isMutedInNews = false
         self.openInSafariReader = false
         self.showImagesInList = true
+        self.logoURL = logoURL
     }
 
     enum CodingKeys: String, CodingKey {
@@ -41,6 +43,7 @@ struct RSSFeed: Codable, Identifiable {
         case isMutedInNews
         case openInSafariReader
         case showImagesInList
+        case logoURL
     }
 
     init(from decoder: Decoder) throws {
@@ -55,6 +58,7 @@ struct RSSFeed: Codable, Identifiable {
         isMutedInNews = try container.decodeIfPresent(Bool.self, forKey: .isMutedInNews) ?? false
         openInSafariReader = try container.decodeIfPresent(Bool.self, forKey: .openInSafariReader) ?? false
         showImagesInList = try container.decodeIfPresent(Bool.self, forKey: .showImagesInList) ?? true
+        logoURL = try container.decodeIfPresent(String.self, forKey: .logoURL)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -69,5 +73,6 @@ struct RSSFeed: Codable, Identifiable {
         try container.encode(isMutedInNews, forKey: .isMutedInNews)
         try container.encode(openInSafariReader, forKey: .openInSafariReader)
         try container.encode(showImagesInList, forKey: .showImagesInList)
+        try container.encodeIfPresent(logoURL, forKey: .logoURL)
     }
 }
