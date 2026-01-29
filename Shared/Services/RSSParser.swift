@@ -395,12 +395,19 @@ class RSSParser: NSObject {
         let title = currentTitle.isEmpty ? "Sin titulo" : currentTitle
         let summarySource = currentContent.count > currentSummary.count ? currentContent : currentSummary
 
+        // If no pubDate from feed, try to extract from content
+        var resolvedPubDate = currentPubDate
+        if resolvedPubDate == nil {
+            let textForDateExtraction = "\(title) \(summarySource)"
+            resolvedPubDate = DateExtractor.shared.extractDate(from: textForDateExtraction)
+        }
+
         let newsItem = NewsItem(
             id: generateID(title: title, link: finalLink),
             title: cleanHTML(title),
             summary: cleanHTML(summarySource),
             link: finalLink,
-            pubDate: currentPubDate,
+            pubDate: resolvedPubDate,
             feedID: feedID,
             feedName: feedName,
             imageURL: selectBestImageURL(from: currentImageCandidates),
