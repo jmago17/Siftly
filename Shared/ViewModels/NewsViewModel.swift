@@ -76,6 +76,10 @@ class NewsViewModel: ObservableObject {
                 if extracted.confidence >= 0.35, extracted.body.count >= 80 {
                     item.cleanBody = extracted.body
                 }
+                // Use extracted date if we don't have one from the feed
+                if item.pubDate == nil, let extractedDate = extracted.extractedPubDate {
+                    item.pubDate = extractedDate
+                }
             }
 
             if let service = aiService {

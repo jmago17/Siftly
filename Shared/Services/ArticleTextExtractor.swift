@@ -32,6 +32,7 @@ struct ExtractedArticleText: Codable {
     let detectedLanguage: String?
     let wordCount: Int
     let hasPaywallHint: Bool
+    let extractedPubDate: Date?
 }
 
 final class ArticleTextExtractor {
@@ -96,7 +97,8 @@ final class ArticleTextExtractor {
                 confidence: 0.3,
                 detectedLanguage: detectLanguage(in: fallbackBody.body),
                 wordCount: countWords(in: fallbackBody.body),
-                hasPaywallHint: false
+                hasPaywallHint: false,
+                extractedPubDate: DateExtractor.shared.extractDate(from: fallbackBody.body)
             )
             cache.setObject(ExtractedArticleTextBox(result), forKey: cacheKey)
             return result
@@ -161,6 +163,9 @@ final class ArticleTextExtractor {
         let detectedLanguage = detectLanguage(in: body)
         let wordCount = countWords(in: body)
 
+        // Try to extract publication date from HTML
+        let extractedPubDate = extractDateFromHTML(html) ?? DateExtractor.shared.extractDate(from: body)
+
         let result = ExtractedArticleText(
             title: resolvedTitle,
             body: body,
@@ -171,10 +176,125 @@ final class ArticleTextExtractor {
             confidence: confidence,
             detectedLanguage: detectedLanguage,
             wordCount: wordCount,
-            hasPaywallHint: hasPaywallHint
+            hasPaywallHint: hasPaywallHint,
+            extractedPubDate: extractedPubDate
         )
 
         return result
+    }
+
+    private func extractDateFromHTML(_ html: String) -> Date? {
+        // Try meta tags first (most reliable)
+        if let date = extractMetaDate(from: html) {
+            return date
+        }
+
+        // Try <time> elements with datetime attribute
+        if let date = extractTimeElementDate(from: html) {
+            return date
+        }
+
+        // Try JSON-LD structured data
+        if let date = extractJSONLDDate(from: html) {
+            return date
+        }
+
+        return nil
+    }
+
+    private func extractMetaDate(from html: String) -> Date? {
+        // Common meta tags for publication date
+        let patterns = [
+            #"<meta\s+(?:property|name)=[\"'](?:article:published_time|og:article:published_time)[\"']\s+content=[\"']([^\"']+)[\"']"#,
+            #"<meta\s+content=[\"']([^\"']+)[\"']\s+(?:property|name)=[\"'](?:article:published_time|og:article:published_time)[\"']"#,
+            #"<meta\s+(?:property|name)=[\"'](?:date|pubdate|publish_date|published_date|datePublished)[\"']\s+content=[\"']([^\"']+)[\"']"#,
+            #"<meta\s+content=[\"']([^\"']+)[\"']\s+(?:property|name)=[\"'](?:date|pubdate|publish_date|published_date|datePublished)[\"']"#
+        ]
+
+        for pattern in patterns {
+            if let date = extractDateWithPattern(pattern, from: html) {
+                return date
+            }
+        }
+
+        return nil
+    }
+
+    private func extractTimeElementDate(from html: String) -> Date? {
+        let pattern = #"<time[^>]+datetime=[\"']([^\"']+)[\"']"#
+        return extractDateWithPattern(pattern, from: html)
+    }
+
+    private func extractJSONLDDate(from html: String) -> Date? {
+        // Look for datePublished in JSON-LD
+        let patterns = [
+            #"\"datePublished\"\s*:\s*\"([^\"]+)\""#,
+            #"\"dateCreated\"\s*:\s*\"([^\"]+)\""#
+        ]
+
+        for pattern in patterns {
+            if let date = extractDateWithPattern(pattern, from: html) {
+                return date
+            }
+        }
+
+        return nil
+    }
+
+    private func extractDateWithPattern(_ pattern: String, from html: String) -> Date? {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return nil
+        }
+
+        let nsString = html as NSString
+        if let match = regex.firstMatch(in: html, options: [], range: NSRange(location: 0, length: nsString.length)),
+           match.numberOfRanges > 1 {
+            let dateString = nsString.substring(with: match.range(at: 1))
+            return parseDateString(dateString)
+        }
+
+        return nil
+    }
+
+    private func parseDateString(_ dateString: String) -> Date? {
+        let trimmed = dateString.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Try ISO8601 formats
+        let iso8601Full = ISO8601DateFormatter()
+        iso8601Full.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = iso8601Full.date(from: trimmed) {
+            return date
+        }
+
+        let iso8601Basic = ISO8601DateFormatter()
+        iso8601Basic.formatOptions = [.withInternetDateTime]
+        if let date = iso8601Basic.date(from: trimmed) {
+            return date
+        }
+
+        // Try common date formats
+        let formats = [
+            "yyyy-MM-dd'T'HH:mm:ssZ",
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            "yyyy-MM-dd'T'HH:mm:ssZZZZZ",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd",
+            "EEE, dd MMM yyyy HH:mm:ss Z"
+        ]
+
+        for format in formats {
+            let formatter = DateFormatter()
+            formatter.dateFormat = format
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.timeZone = TimeZone(secondsFromGMT: 0)
+            if let date = formatter.date(from: trimmed) {
+                return date
+            }
+        }
+
+        // Fall back to DateExtractor for text-based dates
+        return DateExtractor.shared.extractDate(from: trimmed)
     }
 
     private func textFromFallback(rssTitle: String?, descriptionHTML: String?, contentHTML: String?, url: URL) -> (title: String, body: String, paragraphs: [String]) {
