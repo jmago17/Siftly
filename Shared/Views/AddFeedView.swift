@@ -11,18 +11,44 @@ struct AddFeedView: View {
 
     @State private var feedName = ""
     @State private var feedURL = ""
+    @State private var feedLogoURL: String?
     @State private var isValidating = false
     @State private var validationMessage = ""
     @State private var isValid = false
+    @State private var detectedMetadata: FeedMetadata?
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Nombre del feed", text: $feedName)
-                        #if os(iOS)
-                        .textContentType(.none)
-                        #endif
+                    HStack(spacing: 12) {
+                        // Logo preview
+                        if let logoURL = feedLogoURL {
+                            CachedAsyncImage(urlString: logoURL, width: 44, height: 44, cornerRadius: 8)
+                        } else {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(width: 44, height: 44)
+                                .overlay {
+                                    Image(systemName: "newspaper")
+                                        .foregroundColor(.gray)
+                                }
+                        }
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            TextField("Nombre del feed", text: $feedName)
+                                #if os(iOS)
+                                .textContentType(.none)
+                                #endif
+
+                            if let description = detectedMetadata?.description {
+                                Text(description)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(2)
+                            }
+                        }
+                    }
 
                     TextField("URL del feed", text: $feedURL)
                         #if os(iOS)
@@ -30,6 +56,13 @@ struct AddFeedView: View {
                         .autocapitalization(.none)
                         .keyboardType(.URL)
                         #endif
+                        .onChange(of: feedURL) { _, newValue in
+                            // Reset validation when URL changes
+                            if !newValue.isEmpty && isValid {
+                                isValid = false
+                                validationMessage = ""
+                            }
+                        }
                 } header: {
                     Text("Información del Feed")
                 } footer: {
@@ -94,23 +127,55 @@ struct AddFeedView: View {
         isValidating = true
         validationMessage = ""
         isValid = false
+        detectedMetadata = nil
+        feedLogoURL = nil
 
+        // First validate the feed URL
         let (valid, message) = await feedsViewModel.validateFeedURL(feedURL)
 
-        isValid = valid
-        validationMessage = message
-        isValidating = false
-
-        // Auto-fill name if empty and valid
-        if valid && feedName.isEmpty {
-            if let url = URL(string: feedURL) {
-                feedName = url.host ?? "RSS Feed"
+        if !valid {
+            await MainActor.run {
+                isValid = false
+                validationMessage = message
+                isValidating = false
             }
+            return
+        }
+
+        // Now try to extract metadata from the website
+        let metadata = await FeedMetadataExtractor.shared.extractMetadata(from: feedURL)
+
+        await MainActor.run {
+            isValid = true
+            validationMessage = message
+            detectedMetadata = metadata
+
+            // Auto-fill name if empty
+            if feedName.isEmpty {
+                if let title = metadata.title, !title.isEmpty {
+                    feedName = title
+                } else if let url = URL(string: feedURL) {
+                    // Fallback to host name
+                    feedName = url.host?.replacingOccurrences(of: "www.", with: "") ?? "RSS Feed"
+                }
+            }
+
+            // Set logo URL
+            feedLogoURL = metadata.logoURL
+
+            // Prefetch the logo image
+            if let logoURL = metadata.logoURL {
+                Task {
+                    _ = await ImageCacheService.shared.loadImage(from: logoURL)
+                }
+            }
+
+            isValidating = false
         }
     }
 
     private func saveFeed() {
-        let feed = RSSFeed(name: feedName, url: feedURL)
+        let feed = RSSFeed(name: feedName, url: feedURL, logoURL: feedLogoURL)
         feedsViewModel.addFeed(feed)
         dismiss()
     }

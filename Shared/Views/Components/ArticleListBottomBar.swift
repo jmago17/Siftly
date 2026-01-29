@@ -23,236 +23,314 @@ struct ArticleListBottomBar: View {
     @Binding var minScoreFilter: Int
     var sortOrder: Binding<ArticleSortOrder>?
     var onMarkAllAsRead: (() -> Void)?
+    var onScrollToTop: (() -> Void)?
+    var onSearch: (() -> Void)?
+
     @State private var showingScorePicker = false
     @State private var showingActionsMenu = false
+    @State private var showingFilterMenu = false
 
     var body: some View {
-        Group {
-            #if os(iOS)
-            HStack(spacing: 12) {
-                // All articles button
-                GlassButton(
-                    systemName: "tray.full",
-                    isActive: readFilter == .all,
-                    tint: readFilter == .all ? .blue : .secondary
-                ) {
-                    readFilter = .all
-                }
-
-                // Unread only button
-                GlassButton(
-                    systemName: "envelope.badge",
-                    isActive: readFilter == .unread,
-                    tint: readFilter == .unread ? .blue : .secondary
-                ) {
-                    readFilter = .unread
-                }
-
-                // Sort order toggle (if provided)
-                if let sortBinding = sortOrder {
-                    GlassButton(
-                        systemName: sortBinding.wrappedValue.iconName,
-                        isActive: true,
-                        tint: .blue
-                    ) {
-                        sortBinding.wrappedValue = sortBinding.wrappedValue == .score ? .chronological : .score
-                    }
-                }
-
-                // Starred toggle
-                GlassButton(
-                    systemName: showStarredOnly ? "star.fill" : "star",
-                    isActive: showStarredOnly,
-                    tint: showStarredOnly ? .yellow : .secondary
-                ) {
-                    showStarredOnly.toggle()
-                }
-
-                // Score filter
-                GlassPillButton(isActive: minScoreFilter > 0, tint: minScoreFilter > 0 ? .blue : .secondary) {
-                    showingScorePicker = true
+        #if os(iOS)
+        HStack(spacing: 12) {
+            // Left pill: Menu, Mark Read, Star, Scroll Up
+            HStack(spacing: 0) {
+                // Menu button (hamburger)
+                Button {
+                    showingActionsMenu = true
                 } label: {
-                    HStack(spacing: 4) {
-                        if minScoreFilter > 0 {
-                            Text("\(minScoreFilter)")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                        }
-                        Image(systemName: "chevron.up")
-                            .font(.caption)
-                    }
+                    Image(systemName: "line.3.horizontal")
+                        .font(.body)
+                        .frame(width: 40, height: 40)
                 }
+                .foregroundColor(.primary)
 
-                // Actions menu (mark all as read, etc.)
-                if onMarkAllAsRead != nil {
-                    GlassButton(
-                        systemName: "ellipsis.circle",
-                        isActive: false,
-                        tint: .secondary
-                    ) {
-                        showingActionsMenu = true
-                    }
+                // Mark as read toggle (dot)
+                Button {
+                    // Toggle between all and unread
+                    readFilter = readFilter == .unread ? .all : .unread
+                } label: {
+                    Image(systemName: readFilter == .unread ? "circle.inset.filled" : "circle")
+                        .font(.body)
+                        .frame(width: 40, height: 40)
                 }
+                .foregroundColor(readFilter == .unread ? .blue : .primary)
+
+                // Star toggle
+                Button {
+                    showStarredOnly.toggle()
+                } label: {
+                    Image(systemName: showStarredOnly ? "star.fill" : "star")
+                        .font(.body)
+                        .frame(width: 40, height: 40)
+                }
+                .foregroundColor(showStarredOnly ? .yellow : .primary)
+
+                // Scroll to top (arrow up)
+                Button {
+                    onScrollToTop?()
+                } label: {
+                    Image(systemName: "chevron.up")
+                        .font(.body)
+                        .frame(width: 40, height: 40)
+                }
+                .foregroundColor(.primary)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
             .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
             )
-            .padding(.horizontal, 16)
-            .padding(.bottom, 8)
-            .confirmationDialog("Acciones", isPresented: $showingActionsMenu) {
-                if let markAllAsRead = onMarkAllAsRead {
-                    Button("Marcar todo como leído") {
-                        markAllAsRead()
-                    }
-                }
-                Button("Cancelar", role: .cancel) { }
+
+            Spacer()
+
+            // Search button (center)
+            Button {
+                onSearch?()
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.body)
+                    .frame(width: 44, height: 44)
             }
-            #else
-            HStack(spacing: 12) {
-                // All articles button
+            .foregroundColor(.primary)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+            )
+
+            Spacer()
+
+            // Filter button (right)
+            Button {
+                showingFilterMenu = true
+            } label: {
+                Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                    .font(.body)
+                    .frame(width: 44, height: 44)
+            }
+            .foregroundColor(hasActiveFilters ? .blue : .primary)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+            )
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .confirmationDialog("Acciones", isPresented: $showingActionsMenu) {
+            if let markAllAsRead = onMarkAllAsRead {
+                Button("Marcar todo como leído") {
+                    markAllAsRead()
+                }
+            }
+            if let sort = sortOrder {
+                Button(sort.wrappedValue == .score ? "Ordenar por fecha" : "Ordenar por puntuación") {
+                    sort.wrappedValue = sort.wrappedValue == .score ? .chronological : .score
+                }
+            }
+            Button("Cancelar", role: .cancel) { }
+        }
+        .sheet(isPresented: $showingFilterMenu) {
+            FilterMenuSheet(
+                readFilter: $readFilter,
+                showStarredOnly: $showStarredOnly,
+                minScoreFilter: $minScoreFilter,
+                sortOrder: sortOrder
+            )
+        }
+        #else
+        // macOS version
+        HStack(spacing: 12) {
+            // Read filter toggle
+            Button {
+                readFilter = readFilter == .unread ? .all : .unread
+            } label: {
+                Image(systemName: readFilter == .unread ? "circle.inset.filled" : "circle")
+                    .font(.title3)
+            }
+            .foregroundColor(readFilter == .unread ? .blue : .secondary)
+
+            // Starred toggle
+            Button {
+                showStarredOnly.toggle()
+            } label: {
+                Image(systemName: showStarredOnly ? "star.fill" : "star")
+                    .font(.title3)
+            }
+            .foregroundColor(showStarredOnly ? .yellow : .secondary)
+
+            // Sort order toggle (if provided)
+            if let sortBinding = sortOrder {
                 Button {
-                    readFilter = .all
+                    sortBinding.wrappedValue = sortBinding.wrappedValue == .score ? .chronological : .score
                 } label: {
-                    Image(systemName: "tray.full")
+                    Image(systemName: sortBinding.wrappedValue.iconName)
                         .font(.title3)
                 }
-                .foregroundColor(readFilter == .all ? .blue : .secondary)
+                .foregroundColor(.blue)
+            }
 
-                // Unread only button
-                Button {
-                    readFilter = .unread
-                } label: {
-                    Image(systemName: "envelope.badge")
-                        .font(.title3)
-                }
-                .foregroundColor(readFilter == .unread ? .blue : .secondary)
+            Divider()
+                .frame(height: 24)
 
-                // Sort order toggle (if provided)
-                if let sortBinding = sortOrder {
-                    Button {
-                        sortBinding.wrappedValue = sortBinding.wrappedValue == .score ? .chronological : .score
-                    } label: {
-                        Image(systemName: sortBinding.wrappedValue.iconName)
-                            .font(.title3)
-                    }
-                    .foregroundColor(.blue)
-                }
-
-                Divider()
-                    .frame(height: 24)
-
-                // Starred toggle
-                Button {
-                    showStarredOnly.toggle()
-                } label: {
-                    Image(systemName: showStarredOnly ? "star.fill" : "star")
-                        .font(.title3)
-                }
-                .foregroundColor(showStarredOnly ? .yellow : .secondary)
-
-                // Score filter
-                Button {
-                    showingScorePicker = true
-                } label: {
-                    HStack(spacing: 2) {
-                        if minScoreFilter > 0 {
-                            Text("\(minScoreFilter)")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                        }
-                        Image(systemName: "chevron.up")
+            // Score filter
+            Button {
+                showingScorePicker = true
+            } label: {
+                HStack(spacing: 2) {
+                    if minScoreFilter > 0 {
+                        Text("\(minScoreFilter)")
                             .font(.caption)
+                            .fontWeight(.semibold)
                     }
+                    Image(systemName: "chevron.up")
+                        .font(.caption)
                 }
-                .foregroundColor(minScoreFilter > 0 ? .blue : .secondary)
+            }
+            .foregroundColor(minScoreFilter > 0 ? .blue : .secondary)
 
-                // Actions menu
-                if let markAllAsRead = onMarkAllAsRead {
-                    Button {
-                        markAllAsRead()
-                    } label: {
-                        Image(systemName: "checkmark.circle")
-                            .font(.title3)
-                    }
-                    .foregroundColor(.secondary)
+            // Actions menu
+            if let markAllAsRead = onMarkAllAsRead {
+                Button {
+                    markAllAsRead()
+                } label: {
+                    Image(systemName: "checkmark.circle")
+                        .font(.title3)
                 }
+                .foregroundColor(.secondary)
             }
-            .padding(.horizontal)
-            .padding(.vertical, 10)
-            .background(Color(nsColor: .windowBackgroundColor))
-            .overlay(alignment: .top) {
-                Divider()
-            }
-            #endif
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 10)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .overlay(alignment: .top) {
+            Divider()
         }
         .sheet(isPresented: $showingScorePicker) {
             ScoreFilterSheet(minScoreFilter: $minScoreFilter)
         }
+        #endif
+    }
+
+    private var hasActiveFilters: Bool {
+        minScoreFilter > 0 || readFilter != .all || showStarredOnly
     }
 }
 
-#if os(iOS)
-private struct GlassButton: View {
-    let systemName: String
-    var isActive: Bool = false
-    var tint: Color = .primary
-    let action: () -> Void
+// MARK: - Filter Menu Sheet
+
+struct FilterMenuSheet: View {
+    @Binding var readFilter: ReadFilter
+    @Binding var showStarredOnly: Bool
+    @Binding var minScoreFilter: Int
+    var sortOrder: Binding<ArticleSortOrder>?
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        Button(action: action) {
-            Image(systemName: systemName)
-                .font(.title3)
-                .frame(width: 36, height: 36)
+        NavigationStack {
+            Form {
+                Section {
+                    // Read filter
+                    Picker("Estado de lectura", selection: $readFilter) {
+                        ForEach(ReadFilter.allCases, id: \.self) { filter in
+                            Text(filter.rawValue).tag(filter)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    // Starred only
+                    Toggle("Solo favoritos", isOn: $showStarredOnly)
+                } header: {
+                    Text("Filtros")
+                }
+
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Puntuación mínima:")
+                            Spacer()
+                            Text("\(minScoreFilter)")
+                                .fontWeight(.bold)
+                                .foregroundColor(scoreColor)
+                        }
+
+                        Slider(value: Binding(
+                            get: { Double(minScoreFilter) },
+                            set: { minScoreFilter = Int($0) }
+                        ), in: 0...100, step: 10)
+                    }
+
+                    if minScoreFilter > 0 {
+                        HStack {
+                            Image(systemName: "info.circle")
+                                .foregroundColor(.blue)
+                            Text("Solo artículos con puntuación ≥ \(minScoreFilter)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Calidad")
+                }
+
+                if let sort = sortOrder {
+                    Section {
+                        Picker("Ordenar por", selection: sort) {
+                            Text("Puntuación").tag(ArticleSortOrder.score)
+                            Text("Fecha").tag(ArticleSortOrder.chronological)
+                        }
+                        .pickerStyle(.segmented)
+                    } header: {
+                        Text("Orden")
+                    }
+                }
+
+                Section {
+                    Button(role: .destructive) {
+                        readFilter = .all
+                        showStarredOnly = false
+                        minScoreFilter = 0
+                    } label: {
+                        Label("Restablecer filtros", systemImage: "arrow.counterclockwise")
+                    }
+                    .disabled(!hasActiveFilters)
+                }
+            }
+            .navigationTitle("Filtros")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Listo") {
+                        dismiss()
+                    }
+                }
+            }
         }
-        .buttonStyle(GlassButtonStyle(isActive: isActive))
-        .foregroundColor(tint)
+        #if os(iOS)
+        .presentationDetents([.medium])
+        #endif
     }
-}
 
-private struct GlassPillButton<Label: View>: View {
-    var isActive: Bool = false
-    var tint: Color = .secondary
-    let action: () -> Void
-    let label: () -> Label
+    private var hasActiveFilters: Bool {
+        minScoreFilter > 0 || readFilter != .all || showStarredOnly
+    }
 
-    var body: some View {
-        Button(action: action) {
-            label()
-                .font(.caption)
-                .frame(minWidth: 36, minHeight: 36)
+    private var scoreColor: Color {
+        switch minScoreFilter {
+        case 0..<40: return .red
+        case 40..<70: return .orange
+        default: return .green
         }
-        .buttonStyle(GlassButtonStyle(isActive: isActive))
-        .foregroundColor(tint)
     }
 }
 
-private struct GlassButtonStyle: ButtonStyle {
-    let isActive: Bool
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(isActive ? Color.white.opacity(0.15) : Color.clear)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.white.opacity(isActive ? 0.3 : 0.1), lineWidth: 0.5)
-            )
-            .scaleEffect(configuration.isPressed ? 0.95 : 1)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
-    }
-}
-#endif
-
-// MARK: - Score Filter Sheet
+// MARK: - Score Filter Sheet (for macOS)
 
 struct ScoreFilterSheet: View {
     @Binding var minScoreFilter: Int
