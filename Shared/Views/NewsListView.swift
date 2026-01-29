@@ -14,10 +14,12 @@ struct NewsListView: View {
     @ObservedObject var newsViewModel: NewsViewModel
     @ObservedObject var feedsViewModel: FeedsViewModel
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
+    @ObservedObject var smartTagsViewModel: SmartTagsViewModel
     @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
     let smartFeedOverride: SmartFeed?
     @State private var selectedFeedID: UUID?
     @State private var selectedSmartFolderID: UUID?
+    @State private var selectedTagID: UUID?
     @State private var isRefreshing = false
     @State private var readFilter: ReadFilter = .unread
     @State private var minScoreFilter: Int = 0
@@ -30,12 +32,14 @@ struct NewsListView: View {
         newsViewModel: NewsViewModel,
         feedsViewModel: FeedsViewModel,
         smartFoldersViewModel: SmartFoldersViewModel,
+        smartTagsViewModel: SmartTagsViewModel,
         smartFeedsViewModel: SmartFeedsViewModel,
         smartFeedOverride: SmartFeed? = nil
     ) {
         self.newsViewModel = newsViewModel
         self.feedsViewModel = feedsViewModel
         self.smartFoldersViewModel = smartFoldersViewModel
+        self.smartTagsViewModel = smartTagsViewModel
         self.smartFeedsViewModel = smartFeedsViewModel
         self.smartFeedOverride = smartFeedOverride
     }
@@ -208,6 +212,15 @@ struct NewsListView: View {
             news = news.filter { $0.isFavorite }
         }
 
+        // Filter by smart tag
+        if let tagID = selectedTagID {
+            news = news.filter { item in
+                item.sources.contains { source in
+                    newsViewModel.newsItems.first { $0.id == source.id }?.tagIDs.contains(tagID) ?? false
+                }
+            }
+        }
+
         if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             let query = searchText.lowercased()
             news = news.filter { item in
@@ -261,6 +274,7 @@ struct NewsListView: View {
             await newsViewModel.processNewsItems(
                 newsItems,
                 smartFolders: smartFoldersViewModel.smartFolders,
+                smartTags: smartTagsViewModel.smartTags,
                 feeds: feedsViewModel.feeds
             )
             smartFoldersViewModel.updateMatchCounts(newsItems: newsViewModel.newsItems)

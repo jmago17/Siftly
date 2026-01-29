@@ -203,6 +203,92 @@ class AppleIntelligenceService: AIService, AIQuestionAnswering {
         return matchingFolders
     }
 
+    /// Assigns smart tags to a news item based on tag descriptions
+    /// Tags are processed in priority order (highest priority first)
+    func assignTags(newsItem: NewsItem, tags: [SmartTag]) async throws -> [UUID] {
+        var matchingTags: [UUID] = []
+
+        let normalizedTitle = normalize(newsItem.aiTitle)
+        let normalizedSummary = normalize(newsItem.aiSummary)
+        let content = "\(normalizedTitle) \(normalizedSummary)"
+
+        let stopwords = Set([
+            "noticia", "noticias", "news", "sobre", "about", "latest", "update", "updates",
+            "de", "la", "el", "los", "las", "un", "una", "unos", "unas", "del", "al", "y", "e", "o", "u",
+            "para", "por", "con", "sin", "en", "a", "the", "and", "or", "of"
+        ])
+
+        let contentTokens = Set(tokenize(content, stopwords: stopwords))
+
+        // Sort tags by priority (highest first)
+        let sortedTags = tags.filter { $0.isEnabled }.sorted { $0.priority > $1.priority }
+
+        for tag in sortedTags {
+            let tagText = normalize("\(tag.name) \(tag.description)")
+            let nameTokens = tokenize(normalize(tag.name), stopwords: stopwords)
+            let descriptionTokens = tokenize(normalize(tag.description), stopwords: stopwords)
+            let tokens = Array(Set(nameTokens + descriptionTokens))
+            let phrases = extractPhrases(from: tag.description)
+
+            if tokens.isEmpty && phrases.isEmpty {
+                continue
+            }
+
+            var totalWeight = 0.0
+            var matchedWeight = 0.0
+            var matchedNameOrPhrase = false
+            var matchedTokensCount = 0
+
+            // Weight tokens from tag name higher
+            for token in tokens {
+                let inName = nameTokens.contains(token)
+                let weight = inName ? 1.8 : 1.0
+                totalWeight += weight
+                if matchesToken(token, contentTokens: contentTokens, content: content) {
+                    matchedWeight += weight
+                    matchedTokensCount += 1
+                    if inName {
+                        matchedNameOrPhrase = true
+                    }
+                }
+            }
+
+            // Weight phrases even higher
+            for phrase in phrases {
+                let weight = 2.5
+                totalWeight += weight
+                if content.contains(phrase) {
+                    matchedWeight += weight
+                    matchedTokensCount += 1
+                    matchedNameOrPhrase = true
+                }
+            }
+
+            let ratio = totalWeight > 0 ? matchedWeight / totalWeight : 0
+
+            // Dynamic threshold based on token count
+            let minimumRatio: Double
+            if tokens.count <= 2 {
+                minimumRatio = 0.2
+            } else if tokens.count <= 4 {
+                minimumRatio = 0.25
+            } else if tokens.count <= 8 {
+                minimumRatio = 0.3
+            } else {
+                minimumRatio = 0.35
+            }
+
+            let minimumMatches = tokens.count <= 4 ? 1 : 2
+            let hasEnoughMatches = matchedNameOrPhrase || matchedTokensCount >= minimumMatches
+
+            if hasEnoughMatches && ratio >= minimumRatio && matchedWeight >= 0.6 {
+                matchingTags.append(tag.id)
+            }
+        }
+
+        return matchingTags
+    }
+
     func answerQuestion(question: String, context: String) async throws -> String {
         let trimmedQuestion = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuestion.isEmpty else {

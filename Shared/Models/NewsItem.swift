@@ -27,7 +27,8 @@ struct NewsItem: Codable, Identifiable {
     // AI-powered fields
     var qualityScore: QualityScore?
     var duplicateGroupID: UUID?
-    var smartFolderIDs: [UUID] = []
+    var smartFolderIDs: [UUID] = [] // Legacy - kept for backwards compatibility
+    var tagIDs: [UUID] = [] // Smart tags assigned by AI
     
     // User interactions
     var isRead: Bool {

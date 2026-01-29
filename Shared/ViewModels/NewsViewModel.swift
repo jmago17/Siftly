@@ -59,13 +59,16 @@ class NewsViewModel: ObservableObject {
     }
     
     // MARK: - AI Processing
-    
-    func processNewsItems(_ items: [NewsItem], smartFolders: [SmartFolder], feeds: [RSSFeed]) async {
+
+    func processNewsItems(_ items: [NewsItem], smartFolders: [SmartFolder], smartTags: [SmartTag], feeds: [RSSFeed]) async {
         isProcessing = true
         updateAIService()
 
         var processedItems: [NewsItem] = []
-        
+
+        // Sort tags by priority for processing
+        let sortedTags = smartTags.filter { $0.isEnabled }.sorted { $0.priority > $1.priority }
+
         // Process each news item
         for var item in items {
             if let extracted = await extractArticleText(for: item) {
@@ -90,16 +93,24 @@ class NewsViewModel: ObservableObject {
                 } catch {
                     print("Error scoring quality for \(item.title): \(error)")
                 }
-                
-                // 2. Classify into smart folders
+
+                // 2. Classify into smart folders (legacy)
                 do {
                     let folderIDs = try await service.classifyIntoSmartFolders(newsItem: item, smartFolders: smartFolders)
                     item.smartFolderIDs = folderIDs
                 } catch {
                     print("Error classifying \(item.title): \(error)")
                 }
+
+                // 3. Assign smart tags (new system - processed by priority)
+                do {
+                    let tagIDs = try await service.assignTags(newsItem: item, tags: sortedTags)
+                    item.tagIDs = tagIDs
+                } catch {
+                    print("Error assigning tags for \(item.title): \(error)")
+                }
             }
-            
+
             processedItems.append(item)
         }
         

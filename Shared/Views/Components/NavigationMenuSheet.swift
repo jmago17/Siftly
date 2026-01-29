@@ -8,12 +8,14 @@ import SwiftUI
 struct NavigationMenuSheet: View {
     @ObservedObject var feedsViewModel: FeedsViewModel
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
+    @ObservedObject var smartTagsViewModel: SmartTagsViewModel
     @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
     @ObservedObject var newsViewModel: NewsViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingSettings = false
     @State private var feedsExpanded = true
     @State private var smartFoldersExpanded = true
+    @State private var smartTagsExpanded = true
     @State private var smartFeedsExpanded = true
     @State private var smartFeedToEdit: SmartFeed?
     @State private var feedToEdit: RSSFeed?
@@ -287,6 +289,7 @@ struct NavigationMenuSheet: View {
                         newsViewModel: newsViewModel,
                         feedsViewModel: feedsViewModel,
                         smartFoldersViewModel: smartFoldersViewModel,
+                        smartTagsViewModel: smartTagsViewModel,
                         smartFeedsViewModel: smartFeedsViewModel
                     )
                     .onAppear { selectedSmartFeedIDValue = "" }
@@ -303,6 +306,7 @@ struct NavigationMenuSheet: View {
                         newsViewModel: newsViewModel,
                         feedsViewModel: feedsViewModel,
                         smartFoldersViewModel: smartFoldersViewModel,
+                        smartTagsViewModel: smartTagsViewModel,
                         smartFeedsViewModel: smartFeedsViewModel,
                         smartFeedOverride: favoritesSmartFeed
                     )
@@ -333,6 +337,7 @@ struct NavigationMenuSheet: View {
                                 newsViewModel: newsViewModel,
                                 feedsViewModel: feedsViewModel,
                                 smartFoldersViewModel: smartFoldersViewModel,
+                                smartTagsViewModel: smartTagsViewModel,
                                 smartFeedsViewModel: smartFeedsViewModel,
                                 smartFeedOverride: smartFeed
                             )
@@ -424,6 +429,7 @@ struct NavigationMenuSheet: View {
         await newsViewModel.processNewsItems(
             newsItems,
             smartFolders: smartFoldersViewModel.smartFolders,
+            smartTags: smartTagsViewModel.smartTags,
             feeds: feedsViewModel.feeds
         )
         smartFoldersViewModel.updateMatchCounts(newsItems: newsViewModel.newsItems)

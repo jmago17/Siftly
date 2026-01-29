@@ -9,6 +9,7 @@ protocol AIService {
     func scoreQuality(newsItem: NewsItem) async throws -> QualityScore
     func detectDuplicates(newsItems: [NewsItem]) async throws -> [DuplicateGroup]
     func classifyIntoSmartFolders(newsItem: NewsItem, smartFolders: [SmartFolder]) async throws -> [UUID]
+    func assignTags(newsItem: NewsItem, tags: [SmartTag]) async throws -> [UUID]
 }
 
 protocol AIQuestionAnswering {

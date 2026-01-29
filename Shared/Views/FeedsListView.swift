@@ -14,6 +14,7 @@ struct FeedsListView: View {
     @ObservedObject var feedsViewModel: FeedsViewModel
     @ObservedObject var newsViewModel: NewsViewModel
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
+    @ObservedObject var smartTagsViewModel: SmartTagsViewModel
     @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
     @AppStorage("selectedSmartFeedID") private var selectedSmartFeedIDValue = ""
     @State private var showingAddFeed = false
@@ -202,6 +203,7 @@ struct FeedsListView: View {
                 newsViewModel: newsViewModel,
                 feedsViewModel: feedsViewModel,
                 smartFoldersViewModel: smartFoldersViewModel,
+                smartTagsViewModel: smartTagsViewModel,
                 smartFeedsViewModel: smartFeedsViewModel
             )
         } label: {
@@ -234,6 +236,7 @@ struct FeedsListView: View {
                         newsViewModel: newsViewModel,
                         feedsViewModel: feedsViewModel,
                         smartFoldersViewModel: smartFoldersViewModel,
+                        smartTagsViewModel: smartTagsViewModel,
                         smartFeedsViewModel: smartFeedsViewModel,
                         smartFeedOverride: smartFeed
                     )
