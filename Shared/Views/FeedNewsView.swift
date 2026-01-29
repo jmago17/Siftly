@@ -4,6 +4,11 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 struct FeedNewsView: View {
     let feed: RSSFeed
@@ -17,6 +22,7 @@ struct FeedNewsView: View {
     @State private var minScoreFilter: Int = 0
     @State private var showStarredOnly: Bool = false
     @State private var searchText = ""
+    @State private var sortOrder: ArticleSortOrder = .score
 
     var body: some View {
         VStack(spacing: 0) {
@@ -39,12 +45,45 @@ struct FeedNewsView: View {
                 }
             } else {
                 List {
-                    ForEach(filteredNews) { item in
+                    ForEach(Array(filteredNews.enumerated()), id: \.element.id) { index, item in
                         UnifiedArticleRow(
                             newsItem: item,
                             newsViewModel: newsViewModel,
                             feedSettings: feedSettings
                         )
+                        .contextMenu {
+                            Button {
+                                toggleReadStatus(for: item)
+                            } label: {
+                                Label(
+                                    item.isRead ? "Marcar como no leído" : "Marcar como leído",
+                                    systemImage: item.isRead ? "envelope.badge" : "envelope.open"
+                                )
+                            }
+
+                            Button {
+                                toggleFavorite(for: item)
+                            } label: {
+                                Label(
+                                    item.isFavorite ? "Quitar de favoritos" : "Añadir a favoritos",
+                                    systemImage: item.isFavorite ? "star.slash" : "star"
+                                )
+                            }
+
+                            Divider()
+
+                            Button {
+                                markAsReadAbove(index: index)
+                            } label: {
+                                Label("Marcar anteriores como leídos", systemImage: "arrow.up.circle")
+                            }
+
+                            Button {
+                                markAsReadBelow(index: index)
+                            } label: {
+                                Label("Marcar siguientes como leídos", systemImage: "arrow.down.circle")
+                            }
+                        }
                     }
                 }
                 .refreshable {
@@ -55,13 +94,26 @@ struct FeedNewsView: View {
             ArticleListBottomBar(
                 readFilter: $readFilter,
                 showStarredOnly: $showStarredOnly,
-                minScoreFilter: $minScoreFilter
+                minScoreFilter: $minScoreFilter,
+                sortOrder: $sortOrder,
+                onMarkAllAsRead: {
+                    markAllAsRead()
+                }
             )
         }
         .navigationTitle(feed.name)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    shareFeedURL()
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+            }
+        }
         #if os(iOS)
         .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
         #else
@@ -113,6 +165,21 @@ struct FeedNewsView: View {
             }
         }
 
+        // Apply sort order
+        news = news.sorted { item1, item2 in
+            switch sortOrder {
+            case .score:
+                let score1 = item1.qualityScore?.overallScore ?? 50
+                let score2 = item2.qualityScore?.overallScore ?? 50
+                if score1 != score2 {
+                    return score1 > score2
+                }
+                return (item1.pubDate ?? Date.distantPast) > (item2.pubDate ?? Date.distantPast)
+            case .chronological:
+                return (item1.pubDate ?? Date.distantPast) > (item2.pubDate ?? Date.distantPast)
+            }
+        }
+
         return news
     }
 
@@ -161,9 +228,89 @@ struct FeedNewsView: View {
         newsViewModel.objectWillChange.send()
     }
 
+    private func toggleReadStatus(for item: DeduplicatedNewsItem) {
+        let newStatus = !item.isRead
+        for source in item.sources {
+            newsViewModel.markAsRead(source.id, isRead: newStatus, notify: false)
+        }
+        newsViewModel.objectWillChange.send()
+    }
+
+    private func toggleFavorite(for item: DeduplicatedNewsItem) {
+        let newStatus = !item.isFavorite
+        for source in item.sources {
+            newsViewModel.markAsFavorite(source.id, isFavorite: newStatus, notify: false)
+        }
+        newsViewModel.objectWillChange.send()
+    }
+
+    private func markAsReadAbove(index: Int) {
+        let items = filteredNews
+        for i in 0..<index {
+            for source in items[i].sources {
+                newsViewModel.markAsRead(source.id, isRead: true, notify: false)
+            }
+        }
+        newsViewModel.objectWillChange.send()
+    }
+
+    private func markAsReadBelow(index: Int) {
+        let items = filteredNews
+        for i in (index + 1)..<items.count {
+            for source in items[i].sources {
+                newsViewModel.markAsRead(source.id, isRead: true, notify: false)
+            }
+        }
+        newsViewModel.objectWillChange.send()
+    }
+
     private var feedSettings: [UUID: RSSFeed] {
         Dictionary(uniqueKeysWithValues: feedsViewModel.feeds.map { ($0.id, $0) })
     }
+
+    private func shareFeedURL() {
+        guard let url = URL(string: feed.url) else { return }
+        #if os(iOS)
+        let activityVC = UIActivityViewController(
+            activityItems: [url],
+            applicationActivities: nil
+        )
+
+        guard let presenter = topViewController() else { return }
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = presenter.view
+            popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+        presenter.present(activityVC, animated: true)
+        #elseif os(macOS)
+        let picker = NSSharingServicePicker(items: [url])
+        if let keyWindow = NSApplication.shared.keyWindow, let contentView = keyWindow.contentView {
+            picker.show(relativeTo: .zero, of: contentView, preferredEdge: .minY)
+        }
+        #endif
+    }
+
+    #if os(iOS)
+    private func topViewController() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let keyWindow = scenes.flatMap { $0.windows }.first(where: { $0.isKeyWindow })
+        return topViewController(from: keyWindow?.rootViewController)
+    }
+
+    private func topViewController(from controller: UIViewController?) -> UIViewController? {
+        if let navigation = controller as? UINavigationController {
+            return topViewController(from: navigation.visibleViewController)
+        }
+        if let tab = controller as? UITabBarController {
+            return topViewController(from: tab.selectedViewController)
+        }
+        if let presented = controller?.presentedViewController {
+            return topViewController(from: presented)
+        }
+        return controller
+    }
+    #endif
 }
 
 // MARK: - Filter Settings View

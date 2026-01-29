@@ -165,6 +165,7 @@ struct SmartFolderDetailView: View {
     let showReadItems: Bool
     @State private var isExpanded = false
     @State private var showAll = false
+    @State private var showingEditSheet = false
 
     private var feedSettings: [UUID: RSSFeed] {
         Dictionary(uniqueKeysWithValues: feedsViewModel.feeds.map { ($0.id, $0) })
@@ -178,7 +179,7 @@ struct SmartFolderDetailView: View {
                     .foregroundColor(.secondary)
                     .padding(.vertical, 8)
             } else {
-                ForEach(visibleItems) { item in
+                ForEach(Array(visibleItems.enumerated()), id: \.element.id) { index, item in
                     UnifiedNewsItemRow(
                         newsItem: item,
                         newsViewModel: newsViewModel,
@@ -187,6 +188,39 @@ struct SmartFolderDetailView: View {
                             selectedNewsItem = item
                         }
                     )
+                    .contextMenu {
+                        Button {
+                            newsViewModel.markAsRead(item.id, isRead: !item.isRead)
+                        } label: {
+                            Label(
+                                item.isRead ? "Marcar como no leído" : "Marcar como leído",
+                                systemImage: item.isRead ? "envelope.badge" : "envelope.open"
+                            )
+                        }
+
+                        Button {
+                            newsViewModel.markAsFavorite(item.id, isFavorite: !item.isFavorite)
+                        } label: {
+                            Label(
+                                item.isFavorite ? "Quitar de favoritos" : "Añadir a favoritos",
+                                systemImage: item.isFavorite ? "star.slash" : "star"
+                            )
+                        }
+
+                        Divider()
+
+                        Button {
+                            markAsReadAbove(index: index)
+                        } label: {
+                            Label("Marcar anteriores como leídos", systemImage: "arrow.up.circle")
+                        }
+
+                        Button {
+                            markAsReadBelow(index: index)
+                        } label: {
+                            Label("Marcar siguientes como leídos", systemImage: "arrow.down.circle")
+                        }
+                    }
                 }
 
                 if filteredItems.count > maxPreviewCount {
@@ -238,6 +272,33 @@ struct SmartFolderDetailView: View {
                     .labelsHidden()
                 }
             }
+            .contextMenu {
+                Button {
+                    showingEditSheet = true
+                } label: {
+                    Label("Personalizar", systemImage: "slider.horizontal.3")
+                }
+
+                Button {
+                    smartFoldersViewModel.toggleFolder(id: folder.id)
+                } label: {
+                    Label(
+                        folder.isEnabled ? "Desactivar" : "Activar",
+                        systemImage: folder.isEnabled ? "eye.slash" : "eye"
+                    )
+                }
+
+                Divider()
+
+                Button(role: .destructive) {
+                    smartFoldersViewModel.deleteFolder(id: folder.id)
+                } label: {
+                    Label("Eliminar", systemImage: "trash")
+                }
+            }
+        }
+        .sheet(isPresented: $showingEditSheet) {
+            AddSmartFolderView(smartFoldersViewModel: smartFoldersViewModel, smartFolder: folder)
         }
     }
 
@@ -264,6 +325,22 @@ struct SmartFolderDetailView: View {
 
     private var filteredItems: [NewsItem] {
         newsItems.filter { showReadItems || !$0.isRead }
+    }
+
+    private func markAsReadAbove(index: Int) {
+        let items = visibleItems
+        for i in 0..<index {
+            newsViewModel.markAsRead(items[i].id, isRead: true, notify: false)
+        }
+        newsViewModel.objectWillChange.send()
+    }
+
+    private func markAsReadBelow(index: Int) {
+        let items = visibleItems
+        for i in (index + 1)..<items.count {
+            newsViewModel.markAsRead(items[i].id, isRead: true, notify: false)
+        }
+        newsViewModel.objectWillChange.send()
     }
 }
 
