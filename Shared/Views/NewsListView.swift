@@ -49,83 +49,91 @@ struct NewsListView: View {
                     Text("Añade feeds RSS para comenzar a ver noticias")
                 }
             } else {
-                VStack(spacing: 0) {
-                    // Filter chips
-                    if readFilter != .all || minScoreFilter > 0 {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                if readFilter != .all {
-                                    FilterChip(
-                                        text: readFilter.rawValue,
-                                        systemImage: "book"
-                                    ) {
-                                        readFilter = .all
+                ZStack(alignment: .bottom) {
+                    VStack(spacing: 0) {
+                        // Filter chips
+                        if readFilter != .all || minScoreFilter > 0 {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    if readFilter != .all {
+                                        FilterChip(
+                                            text: readFilter.rawValue,
+                                            systemImage: "book"
+                                        ) {
+                                            readFilter = .all
+                                        }
+                                    }
+
+                                    if minScoreFilter > 0 {
+                                        FilterChip(
+                                            text: "Score ≥ \(minScoreFilter)",
+                                            systemImage: "star"
+                                        ) {
+                                            minScoreFilter = 0
+                                        }
                                     }
                                 }
+                                .padding(.horizontal)
+                                .padding(.vertical, 8)
+                            }
+                            #if os(iOS)
+                            .background(Color(uiColor: .systemBackground))
+                            #else
+                            .background(Color(nsColor: .windowBackgroundColor))
+                            #endif
+                        }
 
-                                if minScoreFilter > 0 {
-                                    FilterChip(
-                                        text: "Score ≥ \(minScoreFilter)",
-                                        systemImage: "star"
-                                    ) {
-                                        minScoreFilter = 0
+                        List {
+                            ForEach(Array(filteredDeduplicatedNews.enumerated()), id: \.element.id) { index, item in
+                                UnifiedArticleRow(
+                                    newsItem: item,
+                                    newsViewModel: newsViewModel,
+                                    feedSettings: feedSettings
+                                )
+                                .contextMenu {
+                                    Button {
+                                        toggleReadStatus(for: item)
+                                    } label: {
+                                        Label(
+                                            item.isRead ? "Marcar como no leído" : "Marcar como leído",
+                                            systemImage: item.isRead ? "envelope.badge" : "envelope.open"
+                                        )
+                                    }
+
+                                    Button {
+                                        toggleFavorite(for: item)
+                                    } label: {
+                                        Label(
+                                            item.isFavorite ? "Quitar de favoritos" : "Añadir a favoritos",
+                                            systemImage: item.isFavorite ? "star.slash" : "star"
+                                        )
+                                    }
+
+                                    Divider()
+
+                                    Button {
+                                        markAsReadAbove(index: index)
+                                    } label: {
+                                        Label("Marcar anteriores como leídos", systemImage: "arrow.up.circle")
+                                    }
+
+                                    Button {
+                                        markAsReadBelow(index: index)
+                                    } label: {
+                                        Label("Marcar siguientes como leídos", systemImage: "arrow.down.circle")
                                     }
                                 }
                             }
-                            .padding(.horizontal)
-                            .padding(.vertical, 8)
+
+                            // Bottom padding to account for floating bar
+                            Color.clear
+                                .frame(height: 70)
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
                         }
-                        #if os(iOS)
-                        .background(Color(uiColor: .systemBackground))
-                        #else
-                        .background(Color(nsColor: .windowBackgroundColor))
-                        #endif
-                    }
-
-                    List {
-                        ForEach(Array(filteredDeduplicatedNews.enumerated()), id: \.element.id) { index, item in
-                            UnifiedArticleRow(
-                                newsItem: item,
-                                newsViewModel: newsViewModel,
-                                feedSettings: feedSettings
-                            )
-                            .contextMenu {
-                                Button {
-                                    toggleReadStatus(for: item)
-                                } label: {
-                                    Label(
-                                        item.isRead ? "Marcar como no leído" : "Marcar como leído",
-                                        systemImage: item.isRead ? "envelope.badge" : "envelope.open"
-                                    )
-                                }
-
-                                Button {
-                                    toggleFavorite(for: item)
-                                } label: {
-                                    Label(
-                                        item.isFavorite ? "Quitar de favoritos" : "Añadir a favoritos",
-                                        systemImage: item.isFavorite ? "star.slash" : "star"
-                                    )
-                                }
-
-                                Divider()
-
-                                Button {
-                                    markAsReadAbove(index: index)
-                                } label: {
-                                    Label("Marcar anteriores como leídos", systemImage: "arrow.up.circle")
-                                }
-
-                                Button {
-                                    markAsReadBelow(index: index)
-                                } label: {
-                                    Label("Marcar siguientes como leídos", systemImage: "arrow.down.circle")
-                                }
-                            }
+                        .refreshable {
+                            await refreshNews()
                         }
-                    }
-                    .refreshable {
-                        await refreshNews()
                     }
 
                     ArticleListBottomBar(
