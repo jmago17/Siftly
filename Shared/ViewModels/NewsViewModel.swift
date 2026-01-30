@@ -142,10 +142,52 @@ class NewsViewModel: ObservableObject {
 
         let feedPriorities = Dictionary(uniqueKeysWithValues: feeds.map { ($0.id, $0.priorityBoost) })
         applyFeedPriorityBoost(to: &processedItems, feedPriorities: feedPriorities)
-        
+
+        // Apply auto-mark-as-read based on feed settings
+        applyAutoMarkAsRead(to: &processedItems, feeds: feeds)
+
+        // Delete old read articles based on global setting
+        deleteOldReadArticles(from: &processedItems)
+
         newsItems = processedItems
         ImageCacheService.shared.prefetchImages(urlStrings: processedItems.compactMap { $0.imageURL })
         isProcessing = false
+    }
+
+    // MARK: - Article Cleanup
+
+    private func applyAutoMarkAsRead(to items: inout [NewsItem], feeds: [RSSFeed]) {
+        let now = Date()
+        let feedSettings = Dictionary(uniqueKeysWithValues: feeds.map { ($0.id, $0.autoMarkReadAfterDays) })
+
+        for index in items.indices {
+            guard !items[index].isRead else { continue }
+            guard let days = feedSettings[items[index].feedID], let daysValue = days else { continue }
+            guard let pubDate = items[index].pubDate else { continue }
+
+            let cutoffDate = Calendar.current.date(byAdding: .day, value: -daysValue, to: now) ?? now
+            if pubDate < cutoffDate {
+                markAsRead(items[index].id, isRead: true, notify: false)
+            }
+        }
+    }
+
+    private func deleteOldReadArticles(from items: inout [NewsItem]) {
+        let deleteAfterDays = UserDefaults.standard.integer(forKey: "deleteReadArticlesAfterDays")
+        guard deleteAfterDays > 0 else { return }
+
+        let now = Date()
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -deleteAfterDays, to: now) ?? now
+
+        items.removeAll { item in
+            // Don't delete favorites
+            guard !item.isFavorite else { return false }
+            // Don't delete unread articles
+            guard item.isRead else { return false }
+            // Check if article is old enough
+            guard let pubDate = item.pubDate else { return false }
+            return pubDate < cutoffDate
+        }
     }
 
     private func extractArticleText(for item: NewsItem) async -> ExtractedArticleText? {

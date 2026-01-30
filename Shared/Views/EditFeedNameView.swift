@@ -13,6 +13,10 @@ struct EditFeedNameView: View {
     @State private var feedName: String
     @State private var openInSafariReader: Bool
     @State private var showImagesInList: Bool
+    @State private var autoMarkReadEnabled: Bool
+    @State private var autoMarkReadDays: Int
+
+    private let dayOptions = [1, 2, 3, 5, 7, 14, 30]
 
     init(feed: RSSFeed, feedsViewModel: FeedsViewModel) {
         self.feed = feed
@@ -20,6 +24,8 @@ struct EditFeedNameView: View {
         _feedName = State(initialValue: feed.name)
         _openInSafariReader = State(initialValue: feed.openInSafariReader)
         _showImagesInList = State(initialValue: feed.showImagesInList)
+        _autoMarkReadEnabled = State(initialValue: feed.autoMarkReadAfterDays != nil)
+        _autoMarkReadDays = State(initialValue: feed.autoMarkReadAfterDays ?? 7)
     }
 
     var body: some View {
@@ -51,8 +57,24 @@ struct EditFeedNameView: View {
                 } footer: {
                     Text("Muestra una miniatura del articulo en las listas de noticias.")
                 }
+
+                Section {
+                    Toggle("Marcar como leído automáticamente", isOn: $autoMarkReadEnabled)
+
+                    if autoMarkReadEnabled {
+                        Picker("Después de", selection: $autoMarkReadDays) {
+                            ForEach(dayOptions, id: \.self) { days in
+                                Text(days == 1 ? "1 día" : "\(days) días").tag(days)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Lectura automática")
+                } footer: {
+                    Text("Los artículos de este feed se marcarán como leídos automáticamente después del tiempo especificado.")
+                }
             }
-            .navigationTitle("Renombrar Feed")
+            .navigationTitle("Ajustes del Feed")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -78,6 +100,7 @@ struct EditFeedNameView: View {
         updated.name = feedName.trimmingCharacters(in: .whitespacesAndNewlines)
         updated.openInSafariReader = openInSafariReader
         updated.showImagesInList = showImagesInList
+        updated.autoMarkReadAfterDays = autoMarkReadEnabled ? autoMarkReadDays : nil
         feedsViewModel.updateFeed(updated)
         dismiss()
     }

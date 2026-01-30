@@ -23,6 +23,7 @@ struct SettingsView: View {
     @State private var showingFeedbinAlert = false
     @AppStorage("feedSource") private var feedSourceRaw = FeedSource.rss.rawValue
     @AppStorage("refreshOnLaunch") private var refreshOnLaunch = true
+    @AppStorage("deleteReadArticlesAfterDays") private var deleteReadArticlesAfterDays = 0
 
     init(newsViewModel: NewsViewModel, smartFoldersViewModel: SmartFoldersViewModel, smartFeedsViewModel: SmartFeedsViewModel, feedsViewModel: FeedsViewModel) {
         self.newsViewModel = newsViewModel
@@ -195,6 +196,22 @@ struct SettingsView: View {
                     Text("Actualización")
                 } footer: {
                     Text("Cuando está activado, la app refresca tus feeds al abrir. Si está desactivado, tendrás que actualizar manualmente.")
+                }
+
+                // Article Cleanup
+                Section {
+                    Picker("Eliminar artículos leídos", selection: $deleteReadArticlesAfterDays) {
+                        Text("Nunca").tag(0)
+                        Text("Después de 1 día").tag(1)
+                        Text("Después de 3 días").tag(3)
+                        Text("Después de 7 días").tag(7)
+                        Text("Después de 14 días").tag(14)
+                        Text("Después de 30 días").tag(30)
+                    }
+                } header: {
+                    Text("Limpieza de artículos")
+                } footer: {
+                    Text("Los artículos marcados como leídos se eliminarán automáticamente después del tiempo especificado. Los favoritos nunca se eliminan.")
                 }
 
                 // Smart Folders Management
