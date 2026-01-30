@@ -219,8 +219,8 @@ struct SmartFolderRowView: View {
         SidebarView(
             feedsViewModel: FeedsViewModel(),
             smartFoldersViewModel: SmartFoldersViewModel(),
-            smartFeedsViewModel: SmartFeedsViewModel(),
             smartTagsViewModel: SmartTagsViewModel(),
+            smartFeedsViewModel: SmartFeedsViewModel(),
             newsViewModel: NewsViewModel()
         )
     }
