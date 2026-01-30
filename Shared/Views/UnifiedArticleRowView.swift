@@ -10,6 +10,7 @@ struct UnifiedArticleRowView: View {
     let newsItem: DeduplicatedNewsItem
     @ObservedObject var newsViewModel: NewsViewModel
     let feedSettings: [UUID: RSSFeed]
+    let tagSettings: [UUID: SmartTag]
     let onTap: () -> Void
     let onSourceSelect: (() -> Void)?
 
@@ -17,12 +18,14 @@ struct UnifiedArticleRowView: View {
         newsItem: DeduplicatedNewsItem,
         newsViewModel: NewsViewModel,
         feedSettings: [UUID: RSSFeed],
+        tagSettings: [UUID: SmartTag] = [:],
         onTap: @escaping () -> Void,
         onSourceSelect: (() -> Void)? = nil
     ) {
         self.newsItem = newsItem
         self.newsViewModel = newsViewModel
         self.feedSettings = feedSettings
+        self.tagSettings = tagSettings
         self.onTap = onTap
         self.onSourceSelect = onSourceSelect
     }
@@ -93,6 +96,21 @@ struct UnifiedArticleRowView: View {
                                 .foregroundColor(.secondary)
                                 .lineLimit(2)
                         }
+
+                        // Tag names
+                        if !articleTags.isEmpty {
+                            HStack(spacing: 4) {
+                                ForEach(articleTags, id: \.id) { tag in
+                                    Text(tag.name)
+                                        .font(.caption2)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(tag.color.opacity(0.2))
+                                        .foregroundColor(tag.color)
+                                        .clipShape(Capsule())
+                                }
+                            }
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -124,6 +142,10 @@ struct UnifiedArticleRowView: View {
     }
 
     // MARK: - Subviews
+
+    private var articleTags: [SmartTag] {
+        newsItem.tagIDs.compactMap { tagSettings[$0] }
+    }
 
     @ViewBuilder
     private var feedLogoView: some View {
@@ -244,6 +266,7 @@ struct UnifiedArticleRow: View {
     let newsItem: DeduplicatedNewsItem
     @ObservedObject var newsViewModel: NewsViewModel
     let feedSettings: [UUID: RSSFeed]
+    var tagSettings: [UUID: SmartTag] = [:]
     @State private var selectedSource: NewsItemSource?
     @State private var showingSourceSelector = false
 
@@ -252,6 +275,7 @@ struct UnifiedArticleRow: View {
             newsItem: newsItem,
             newsViewModel: newsViewModel,
             feedSettings: feedSettings,
+            tagSettings: tagSettings,
             onTap: {
                 selectedSource = newsItem.primarySource
             },

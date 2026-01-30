@@ -125,7 +125,8 @@ struct SidebarView: View {
                 newsViewModel: newsViewModel,
                 smartFoldersViewModel: smartFoldersViewModel,
                 smartFeedsViewModel: smartFeedsViewModel,
-                feedsViewModel: feedsViewModel
+                feedsViewModel: feedsViewModel,
+                smartTagsViewModel: smartTagsViewModel
             )
         }
     }

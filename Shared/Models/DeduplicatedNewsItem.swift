@@ -23,6 +23,9 @@ struct DeduplicatedNewsItem: Identifiable {
     /// Smart folder IDs
     let smartFolderIDs: [UUID]
 
+    /// Smart tag IDs
+    let tagIDs: [UUID]
+
     /// Read status - true if ANY source has been read
     var isRead: Bool {
         sources.contains { $0.isRead }
@@ -54,6 +57,7 @@ struct DeduplicatedNewsItem: Identifiable {
         self.sources = [NewsItemSource(from: newsItem)]
         self.qualityScore = newsItem.qualityScore
         self.smartFolderIDs = newsItem.smartFolderIDs
+        self.tagIDs = newsItem.tagIDs
     }
 
     /// Initialize from multiple duplicate items
@@ -76,10 +80,13 @@ struct DeduplicatedNewsItem: Identifiable {
 
         // Combine all smart folder IDs
         self.smartFolderIDs = Array(Set(duplicates.flatMap { $0.smartFolderIDs }))
+
+        // Combine all tag IDs
+        self.tagIDs = Array(Set(duplicates.flatMap { $0.tagIDs }))
     }
 
     /// Initialize with pre-filtered sources
-    init(id: String, title: String, summary: String, pubDate: Date?, sources: [NewsItemSource], smartFolderIDs: [UUID], author: String? = nil) {
+    init(id: String, title: String, summary: String, pubDate: Date?, sources: [NewsItemSource], smartFolderIDs: [UUID], tagIDs: [UUID] = [], author: String? = nil) {
         self.id = id
         self.title = title
         self.summary = summary
@@ -90,6 +97,7 @@ struct DeduplicatedNewsItem: Identifiable {
         self.qualityScore = sources.compactMap { $0.qualityScore }
             .max(by: { $0.overallScore < $1.overallScore })
         self.smartFolderIDs = smartFolderIDs
+        self.tagIDs = tagIDs
     }
 
     /// Check if this item has multiple sources

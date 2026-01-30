@@ -59,7 +59,8 @@ struct NewsListView: View {
                                 UnifiedArticleRow(
                                     newsItem: item,
                                     newsViewModel: newsViewModel,
-                                    feedSettings: feedSettings
+                                    feedSettings: feedSettings,
+                                    tagSettings: tagSettings
                                 )
                                 .contextMenu {
                                     Button {
@@ -216,6 +217,10 @@ struct NewsListView: View {
 
     private var feedSettings: [UUID: RSSFeed] {
         Dictionary(uniqueKeysWithValues: feedsViewModel.feeds.map { ($0.id, $0) })
+    }
+
+    private var tagSettings: [UUID: SmartTag] {
+        Dictionary(uniqueKeysWithValues: smartTagsViewModel.smartTags.map { ($0.id, $0) })
     }
 
     private var smartFeedTitle: String {

@@ -15,6 +15,7 @@ struct FavoritesView: View {
     @ObservedObject var feedsViewModel: FeedsViewModel
     @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
     var smartFoldersViewModel: SmartFoldersViewModel = SmartFoldersViewModel()
+    var smartTagsViewModel: SmartTagsViewModel = SmartTagsViewModel()
     @State private var readFilter: ReadFilter = .all
     @State private var minScoreFilter: Int = 0
     @State private var showStarredOnly: Bool = true // Always true for Favorites
@@ -34,7 +35,8 @@ struct FavoritesView: View {
                             UnifiedArticleRow(
                                 newsItem: item,
                                 newsViewModel: newsViewModel,
-                                feedSettings: feedSettings
+                                feedSettings: feedSettings,
+                                tagSettings: tagSettings
                             )
                             .contextMenu {
                                 Button {
@@ -135,6 +137,10 @@ struct FavoritesView: View {
 
     private var feedSettings: [UUID: RSSFeed] {
         Dictionary(uniqueKeysWithValues: feedsViewModel.feeds.map { ($0.id, $0) })
+    }
+
+    private var tagSettings: [UUID: SmartTag] {
+        Dictionary(uniqueKeysWithValues: smartTagsViewModel.smartTags.map { ($0.id, $0) })
     }
 
     // MARK: - Actions
