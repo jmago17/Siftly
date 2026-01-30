@@ -92,6 +92,15 @@ struct ArticleReaderView: View {
                                     .frame(height: 200)
                                 }
 
+                                // Channel/Feed name at top
+                                if let feedName = newsItem?.feedName, !feedName.isEmpty {
+                                    Text(feedName.uppercased())
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.accentColor)
+                                        .tracking(0.5)
+                                }
+
                                 Text(titleText)
                                     .font(.title2)
                                     .fontWeight(.bold)

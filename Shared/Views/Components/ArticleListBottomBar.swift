@@ -22,124 +22,152 @@ struct ArticleListBottomBar: View {
     @Binding var showStarredOnly: Bool
     @Binding var minScoreFilter: Int
     var sortOrder: Binding<ArticleSortOrder>?
+    var searchText: Binding<String>?
     var onMarkAllAsRead: (() -> Void)?
     var onScrollToTop: (() -> Void)?
-    var onSearch: (() -> Void)?
 
     @State private var showingScorePicker = false
-    @State private var showingActionsMenu = false
     @State private var showingFilterMenu = false
+    @State private var showingSearch = false
+    @FocusState private var isSearchFocused: Bool
 
     var body: some View {
         #if os(iOS)
-        HStack(spacing: 12) {
-            // Left pill: Menu, Mark Read, Star, Scroll Up
-            HStack(spacing: 0) {
-                // Menu button (hamburger)
-                Button {
-                    showingActionsMenu = true
-                } label: {
-                    Image(systemName: "line.3.horizontal")
-                        .font(.body)
-                        .frame(width: 40, height: 40)
+        VStack(spacing: 8) {
+            // Search bar (shown when search is active)
+            if showingSearch, let searchBinding = searchText {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                    TextField("Buscar artículos...", text: searchBinding)
+                        .textFieldStyle(.plain)
+                        .focused($isSearchFocused)
+                        .submitLabel(.search)
+                    if !searchBinding.wrappedValue.isEmpty {
+                        Button {
+                            searchBinding.wrappedValue = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    Button("Cancelar") {
+                        searchBinding.wrappedValue = ""
+                        showingSearch = false
+                        isSearchFocused = false
+                    }
+                    .foregroundColor(.accentColor)
                 }
-                .foregroundColor(.primary)
-
-                // Mark as read toggle (dot)
-                Button {
-                    // Toggle between all and unread
-                    readFilter = readFilter == .unread ? .all : .unread
-                } label: {
-                    Image(systemName: readFilter == .unread ? "circle.inset.filled" : "circle")
-                        .font(.body)
-                        .frame(width: 40, height: 40)
-                }
-                .foregroundColor(readFilter == .unread ? .blue : .primary)
-
-                // Star toggle
-                Button {
-                    showStarredOnly.toggle()
-                } label: {
-                    Image(systemName: showStarredOnly ? "star.fill" : "star")
-                        .font(.body)
-                        .frame(width: 40, height: 40)
-                }
-                .foregroundColor(showStarredOnly ? .yellow : .primary)
-
-                // Scroll to top (arrow up)
-                Button {
-                    onScrollToTop?()
-                } label: {
-                    Image(systemName: "chevron.up")
-                        .font(.body)
-                        .frame(width: 40, height: 40)
-                }
-                .foregroundColor(.primary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(.horizontal, 16)
             }
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
-            )
 
-            Spacer()
+            HStack(spacing: 12) {
+                // Left pill: Filter, Mark Read, Star, Scroll Up
+                HStack(spacing: 0) {
+                    // Filter button (replaces burger menu)
+                    Button {
+                        showingFilterMenu = true
+                    } label: {
+                        Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                            .font(.body)
+                            .frame(width: 40, height: 40)
+                    }
+                    .foregroundColor(hasActiveFilters ? .accentColor : .primary)
 
-            // Search button (center)
-            Button {
-                onSearch?()
-            } label: {
-                Image(systemName: "magnifyingglass")
-                    .font(.body)
-                    .frame(width: 44, height: 44)
-            }
-            .foregroundColor(.primary)
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
-            )
+                    // Mark as read toggle (dot)
+                    Button {
+                        readFilter = readFilter == .unread ? .all : .unread
+                    } label: {
+                        Image(systemName: readFilter == .unread ? "circle.inset.filled" : "circle")
+                            .font(.body)
+                            .frame(width: 40, height: 40)
+                    }
+                    .foregroundColor(readFilter == .unread ? .accentColor : .primary)
 
-            Spacer()
+                    // Star toggle
+                    Button {
+                        showStarredOnly.toggle()
+                    } label: {
+                        Image(systemName: showStarredOnly ? "star.fill" : "star")
+                            .font(.body)
+                            .frame(width: 40, height: 40)
+                    }
+                    .foregroundColor(showStarredOnly ? .yellow : .primary)
 
-            // Filter button (right)
-            Button {
-                showingFilterMenu = true
-            } label: {
-                Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                    .font(.body)
-                    .frame(width: 44, height: 44)
-            }
-            .foregroundColor(hasActiveFilters ? .blue : .primary)
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
-            )
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .confirmationDialog("Acciones", isPresented: $showingActionsMenu) {
-            if let markAllAsRead = onMarkAllAsRead {
-                Button("Marcar todo como leído") {
-                    markAllAsRead()
+                    // Scroll to top (arrow up)
+                    Button {
+                        onScrollToTop?()
+                    } label: {
+                        Image(systemName: "chevron.up")
+                            .font(.body)
+                            .frame(width: 40, height: 40)
+                    }
+                    .foregroundColor(.primary)
+                }
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                )
+
+                Spacer()
+
+                // Search button (center)
+                if searchText != nil {
+                    Button {
+                        showingSearch.toggle()
+                        if showingSearch {
+                            isSearchFocused = true
+                        }
+                    } label: {
+                        Image(systemName: showingSearch ? "magnifyingglass.circle.fill" : "magnifyingglass")
+                            .font(.body)
+                            .frame(width: 44, height: 44)
+                    }
+                    .foregroundColor(showingSearch ? .accentColor : .primary)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                    )
+
+                    Spacer()
+                }
+
+                // Sort order button (right)
+                if let sort = sortOrder {
+                    Button {
+                        sort.wrappedValue = sort.wrappedValue == .score ? .chronological : .score
+                    } label: {
+                        Image(systemName: sort.wrappedValue.iconName)
+                            .font(.body)
+                            .frame(width: 44, height: 44)
+                    }
+                    .foregroundColor(.primary)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                    )
                 }
             }
-            if let sort = sortOrder {
-                Button(sort.wrappedValue == .score ? "Ordenar por fecha" : "Ordenar por puntuación") {
-                    sort.wrappedValue = sort.wrappedValue == .score ? .chronological : .score
-                }
-            }
-            Button("Cancelar", role: .cancel) { }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
         }
         .sheet(isPresented: $showingFilterMenu) {
             FilterMenuSheet(
                 readFilter: $readFilter,
                 showStarredOnly: $showStarredOnly,
                 minScoreFilter: $minScoreFilter,
-                sortOrder: sortOrder
+                sortOrder: sortOrder,
+                onMarkAllAsRead: onMarkAllAsRead
             )
         }
         #else
@@ -228,6 +256,7 @@ struct FilterMenuSheet: View {
     @Binding var showStarredOnly: Bool
     @Binding var minScoreFilter: Int
     var sortOrder: Binding<ArticleSortOrder>?
+    var onMarkAllAsRead: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -267,7 +296,7 @@ struct FilterMenuSheet: View {
                     if minScoreFilter > 0 {
                         HStack {
                             Image(systemName: "info.circle")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                             Text("Solo artículos con puntuación ≥ \(minScoreFilter)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
@@ -290,6 +319,15 @@ struct FilterMenuSheet: View {
                 }
 
                 Section {
+                    if let markAllAsRead = onMarkAllAsRead {
+                        Button {
+                            markAllAsRead()
+                            dismiss()
+                        } label: {
+                            Label("Marcar todo como leído", systemImage: "checkmark.circle")
+                        }
+                    }
+
                     Button(role: .destructive) {
                         readFilter = .all
                         showStarredOnly = false
@@ -298,6 +336,8 @@ struct FilterMenuSheet: View {
                         Label("Restablecer filtros", systemImage: "arrow.counterclockwise")
                     }
                     .disabled(!hasActiveFilters)
+                } header: {
+                    Text("Acciones")
                 }
             }
             .navigationTitle("Filtros")
@@ -313,7 +353,7 @@ struct FilterMenuSheet: View {
             }
         }
         #if os(iOS)
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
         #endif
     }
 
