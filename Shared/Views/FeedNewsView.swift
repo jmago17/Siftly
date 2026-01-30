@@ -102,6 +102,7 @@ struct FeedNewsView: View {
                 showStarredOnly: $showStarredOnly,
                 minScoreFilter: $minScoreFilter,
                 sortOrder: $sortOrder,
+                searchText: $searchText,
                 onMarkAllAsRead: {
                     markAllAsRead()
                 }
@@ -120,11 +121,6 @@ struct FeedNewsView: View {
                 }
             }
         }
-        #if os(iOS)
-        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
-        #else
-        .searchable(text: $searchText)
-        #endif
         .overlay {
             if isRefreshing {
                 ProgressView("Actualizando...")

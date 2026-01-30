@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "AppIcon-Light.png",
+      "filename" : "crema white.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -13,7 +13,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "AppIcon-Dark.png",
+      "filename" : "Crema dark.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -25,67 +25,67 @@
           "value" : "tinted"
         }
       ],
-      "filename" : "AppIcon-Tinted.png",
+      "filename" : "crema white 1.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
     },
     {
-      "filename" : "AppIcon-Light.png",
+      "filename" : "crema white 2.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "16x16"
     },
     {
-      "filename" : "AppIcon-Light.png",
+      "filename" : "crema white 4.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "16x16"
     },
     {
-      "filename" : "AppIcon-Light.png",
+      "filename" : "crema white 3.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "32x32"
     },
     {
-      "filename" : "AppIcon-Light.png",
+      "filename" : "crema white 5.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "32x32"
     },
     {
-      "filename" : "AppIcon-Light.png",
+      "filename" : "crema white 6.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "128x128"
     },
     {
-      "filename" : "AppIcon-Light.png",
+      "filename" : "crema white 7.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "128x128"
     },
     {
-      "filename" : "AppIcon-Light.png",
+      "filename" : "crema white 11.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "256x256"
     },
     {
-      "filename" : "AppIcon-Light.png",
+      "filename" : "crema white 10.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "256x256"
     },
     {
-      "filename" : "AppIcon-Light.png",
+      "filename" : "crema white 9.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "512x512"
     },
     {
-      "filename" : "AppIcon-Light.png",
+      "filename" : "crema white 8.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"

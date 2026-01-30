@@ -224,7 +224,6 @@ class AppleIntelligenceService: AIService, AIQuestionAnswering {
         let sortedTags = tags.filter { $0.isEnabled }.sorted { $0.priority > $1.priority }
 
         for tag in sortedTags {
-            let tagText = normalize("\(tag.name) \(tag.description)")
             let nameTokens = tokenize(normalize(tag.name), stopwords: stopwords)
             let descriptionTokens = tokenize(normalize(tag.description), stopwords: stopwords)
             let tokens = Array(Set(nameTokens + descriptionTokens))
