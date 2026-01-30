@@ -8,6 +8,7 @@ import SwiftUI
 struct SidebarView: View {
     @ObservedObject var feedsViewModel: FeedsViewModel
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
+    @ObservedObject var smartTagsViewModel: SmartTagsViewModel
     @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
     @ObservedObject var newsViewModel: NewsViewModel
     @State private var showingAddFeed = false

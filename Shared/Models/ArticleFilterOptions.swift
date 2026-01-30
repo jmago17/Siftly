@@ -82,6 +82,8 @@ struct ArticleFilterOptions: Codable, Equatable {
     var relativeValue: Int
     var relativeUnit: RelativeDateUnit
     var relativeComparison: RelativeDateComparison
+    var requiredTagIDs: [UUID] // Article must have ALL of these tags
+    var excludedTagIDs: [UUID] // Article must NOT have ANY of these tags
 
     init(
         matchMode: FilterMatchMode = .all,
@@ -94,7 +96,9 @@ struct ArticleFilterOptions: Codable, Equatable {
         useRelativeDate: Bool = false,
         relativeValue: Int = 1,
         relativeUnit: RelativeDateUnit = .days,
-        relativeComparison: RelativeDateComparison = .withinLast
+        relativeComparison: RelativeDateComparison = .withinLast,
+        requiredTagIDs: [UUID] = [],
+        excludedTagIDs: [UUID] = []
     ) {
         self.matchMode = matchMode
         self.contentQuery = contentQuery
@@ -107,9 +111,11 @@ struct ArticleFilterOptions: Codable, Equatable {
         self.relativeValue = relativeValue
         self.relativeUnit = relativeUnit
         self.relativeComparison = relativeComparison
+        self.requiredTagIDs = requiredTagIDs
+        self.excludedTagIDs = excludedTagIDs
     }
 
-    func matches(content: String, url: String, feedTitle: String, author: String?, date: Date?) -> Bool {
+    func matches(content: String, url: String, feedTitle: String, author: String?, date: Date?, tagIDs: [UUID] = []) -> Bool {
         var conditions: [Bool] = []
 
         let trimmedContent = contentQuery.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -143,6 +149,18 @@ struct ArticleFilterOptions: Codable, Equatable {
             conditions.append(matchesRelative)
         }
 
+        // Check required tags (article must have ALL required tags)
+        if !requiredTagIDs.isEmpty {
+            let hasAllRequired = requiredTagIDs.allSatisfy { tagIDs.contains($0) }
+            conditions.append(hasAllRequired)
+        }
+
+        // Check excluded tags (article must NOT have ANY excluded tags)
+        if !excludedTagIDs.isEmpty {
+            let hasNoExcluded = !excludedTagIDs.contains { tagIDs.contains($0) }
+            conditions.append(hasNoExcluded)
+        }
+
         guard !conditions.isEmpty else { return true }
 
         switch matchMode {
@@ -160,7 +178,9 @@ struct ArticleFilterOptions: Codable, Equatable {
             contentQuery, urlQuery, feedTitleQuery, authorQuery
         ].contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
-        return textFilters || useExactDate || (useRelativeDate && relativeValue > 0)
+        let hasTagFilters = !requiredTagIDs.isEmpty || !excludedTagIDs.isEmpty
+
+        return textFilters || useExactDate || (useRelativeDate && relativeValue > 0) || hasTagFilters
     }
 
     private func matchesRelativeDate(_ date: Date) -> Bool {

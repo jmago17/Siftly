@@ -9,6 +9,7 @@ struct ContentView: View {
     @StateObject private var feedsViewModel = FeedsViewModel()
     @StateObject private var newsViewModel = NewsViewModel()
     @StateObject private var smartFoldersViewModel = SmartFoldersViewModel()
+    @StateObject private var smartTagsViewModel = SmartTagsViewModel()
     @StateObject private var smartFeedsViewModel = SmartFeedsViewModel()
     @AppStorage("refreshOnLaunch") private var refreshOnLaunch = true
     @State private var didInitialRefresh = false
@@ -19,6 +20,7 @@ struct ContentView: View {
         NavigationMenuSheet(
             feedsViewModel: feedsViewModel,
             smartFoldersViewModel: smartFoldersViewModel,
+            smartTagsViewModel: smartTagsViewModel,
             smartFeedsViewModel: smartFeedsViewModel,
             newsViewModel: newsViewModel,
             showsCloseButton: false
@@ -28,6 +30,7 @@ struct ContentView: View {
             SidebarView(
                 feedsViewModel: feedsViewModel,
                 smartFoldersViewModel: smartFoldersViewModel,
+                smartTagsViewModel: smartTagsViewModel,
                 smartFeedsViewModel: smartFeedsViewModel,
                 newsViewModel: newsViewModel
             )
@@ -37,6 +40,7 @@ struct ContentView: View {
                     feedsViewModel: feedsViewModel,
                     newsViewModel: newsViewModel,
                     smartFoldersViewModel: smartFoldersViewModel,
+                    smartTagsViewModel: smartTagsViewModel,
                     smartFeedsViewModel: smartFeedsViewModel
                 )
             }
@@ -71,6 +75,7 @@ struct ContentView: View {
         await newsViewModel.processNewsItems(
             newsItems,
             smartFolders: smartFoldersViewModel.smartFolders,
+            smartTags: smartTagsViewModel.smartTags,
             feeds: feedsViewModel.feeds
         )
         smartFoldersViewModel.updateMatchCounts(newsItems: newsViewModel.newsItems)
