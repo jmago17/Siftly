@@ -42,6 +42,12 @@
 		A01001B3 /* RSSFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A4 /* RSSFeed.swift */; };
 		A01001B4 /* SmartFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A5 /* SmartFolder.swift */; };
 		A01001B5 /* SmartFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A5 /* SmartFolder.swift */; };
+		SMARTTAG001BLD0000000001 /* SmartTag.swift in Sources */ = {isa = PBXBuildFile; fileRef = SMARTTAG001REF0000000001 /* SmartTag.swift */; };
+		SMARTTAG001BLD0000000002 /* SmartTag.swift in Sources */ = {isa = PBXBuildFile; fileRef = SMARTTAG001REF0000000001 /* SmartTag.swift */; };
+		SMARTTAGVM01BLD000000001 /* SmartTagsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SMARTTAGVM01REF000000001 /* SmartTagsViewModel.swift */; };
+		SMARTTAGVM01BLD000000002 /* SmartTagsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = SMARTTAGVM01REF000000001 /* SmartTagsViewModel.swift */; };
+		SMARTTAGLV01BLD000000001 /* SmartTagsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SMARTTAGLV01REF000000001 /* SmartTagsListView.swift */; };
+		SMARTTAGLV01BLD000000002 /* SmartTagsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SMARTTAGLV01REF000000001 /* SmartTagsListView.swift */; };
 		A01001B6 /* QualityScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A6 /* QualityScore.swift */; };
 		A01001B7 /* QualityScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A6 /* QualityScore.swift */; };
 		A01001B8 /* DuplicateGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01001A7 /* DuplicateGroup.swift */; };
@@ -190,6 +196,7 @@
 		A01001A3 /* NewsItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsItem.swift; sourceTree = "<group>"; };
 		A01001A4 /* RSSFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RSSFeed.swift; sourceTree = "<group>"; };
 		A01001A5 /* SmartFolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartFolder.swift; sourceTree = "<group>"; };
+		SMARTTAG001REF0000000001 /* SmartTag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartTag.swift; sourceTree = "<group>"; };
 		A01001A6 /* QualityScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualityScore.swift; sourceTree = "<group>"; };
 		A01001A7 /* DuplicateGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuplicateGroup.swift; sourceTree = "<group>"; };
 		A01001A8 /* AIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProvider.swift; sourceTree = "<group>"; };
@@ -200,9 +207,11 @@
 		A01001CE /* NewsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsViewModel.swift; sourceTree = "<group>"; };
 		A01001D1 /* FeedsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedsViewModel.swift; sourceTree = "<group>"; };
 		A01001D4 /* SmartFoldersViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartFoldersViewModel.swift; sourceTree = "<group>"; };
+		SMARTTAGVM01REF000000001 /* SmartTagsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartTagsViewModel.swift; sourceTree = "<group>"; };
 		A01001D7 /* NewsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsListView.swift; sourceTree = "<group>"; };
 		A01001DA /* FeedsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedsListView.swift; sourceTree = "<group>"; };
 		A01001DD /* SmartFoldersListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartFoldersListView.swift; sourceTree = "<group>"; };
+		SMARTTAGLV01REF000000001 /* SmartTagsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartTagsListView.swift; sourceTree = "<group>"; };
 		A01001E0 /* AddFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFeedView.swift; sourceTree = "<group>"; };
 		A01001E3 /* AddSmartFolderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSmartFolderView.swift; sourceTree = "<group>"; };
 		A01001E6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -315,6 +324,7 @@
 				C1D2E3F4A5B60718293A4B60 /* ArticleFilterOptions.swift */,
 				B4C5D6E7F8091A2B3C4D5E6F /* SmartFeed.swift */,
 				A01001A5 /* SmartFolder.swift */,
+				SMARTTAG001REF0000000001 /* SmartTag.swift */,
 				A01001A6 /* QualityScore.swift */,
 				A01001A7 /* DuplicateGroup.swift */,
 				A01001A8 /* AIProvider.swift */,
@@ -354,6 +364,7 @@
 				A01001CE /* NewsViewModel.swift */,
 				A01001D1 /* FeedsViewModel.swift */,
 				A01001D4 /* SmartFoldersViewModel.swift */,
+				SMARTTAGVM01REF000000001 /* SmartTagsViewModel.swift */,
 				B4C5D6E7F8091A2B3C4D5E70 /* SmartFeedsViewModel.swift */,
 			);
 			path = ViewModels;
@@ -373,6 +384,7 @@
 				C1D2E3F4A5B60718293A4B63 /* ArticleFilterOptionsView.swift */,
 				A01001DA /* FeedsListView.swift */,
 				A01001DD /* SmartFoldersListView.swift */,
+				SMARTTAGLV01REF000000001 /* SmartTagsListView.swift */,
 				A01001E0 /* AddFeedView.swift */,
 				C1A2B3C4D5E6F708192A3B4C /* AddFeedFolderView.swift */,
 				A01001E3 /* AddSmartFolderView.swift */,
@@ -583,6 +595,9 @@
 				C1D2E3F4A5B60718293A4B5F /* ArticleFilterOptions.swift in Sources */,
 				B4C5D6E7F8091A2B3C4D5E72 /* SmartFeed.swift in Sources */,
 				A01001B4 /* SmartFolder.swift in Sources */,
+				SMARTTAG001BLD0000000001 /* SmartTag.swift in Sources */,
+				SMARTTAGVM01BLD000000001 /* SmartTagsViewModel.swift in Sources */,
+				SMARTTAGLV01BLD000000001 /* SmartTagsListView.swift in Sources */,
 				A01001B6 /* QualityScore.swift in Sources */,
 				A01001B8 /* DuplicateGroup.swift in Sources */,
 				A01001BA /* AIProvider.swift in Sources */,
@@ -648,6 +663,9 @@
 				C1D2E3F4A5B60718293A4B61 /* ArticleFilterOptions.swift in Sources */,
 				B4C5D6E7F8091A2B3C4D5E73 /* SmartFeed.swift in Sources */,
 				A01001B5 /* SmartFolder.swift in Sources */,
+				SMARTTAG001BLD0000000002 /* SmartTag.swift in Sources */,
+				SMARTTAGVM01BLD000000002 /* SmartTagsViewModel.swift in Sources */,
+				SMARTTAGLV01BLD000000002 /* SmartTagsListView.swift in Sources */,
 				A01001B7 /* QualityScore.swift in Sources */,
 				A01001B9 /* DuplicateGroup.swift in Sources */,
 				A01001BB /* AIProvider.swift in Sources */,
