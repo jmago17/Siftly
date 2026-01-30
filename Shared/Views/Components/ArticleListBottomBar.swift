@@ -66,9 +66,9 @@ struct ArticleListBottomBar: View {
             }
 
             HStack(spacing: 12) {
-                // Left pill: Filter, Mark Read, Star, Scroll Up
+                // Left pill: Filter, Read toggle, Star, Sort, Score slider
                 HStack(spacing: 0) {
-                    // Filter button (replaces burger menu)
+                    // Filter button
                     Button {
                         showingFilterMenu = true
                     } label: {
@@ -98,15 +98,34 @@ struct ArticleListBottomBar: View {
                     }
                     .foregroundColor(showStarredOnly ? .yellow : .primary)
 
-                    // Scroll to top (arrow up)
-                    Button {
-                        onScrollToTop?()
-                    } label: {
-                        Image(systemName: "chevron.up")
-                            .font(.body)
-                            .frame(width: 40, height: 40)
+                    // Sort order toggle (score/chronological)
+                    if let sort = sortOrder {
+                        Button {
+                            sort.wrappedValue = sort.wrappedValue == .score ? .chronological : .score
+                        } label: {
+                            Image(systemName: sort.wrappedValue.iconName)
+                                .font(.body)
+                                .frame(width: 40, height: 40)
+                        }
+                        .foregroundColor(.primary)
                     }
-                    .foregroundColor(.primary)
+
+                    // Score filter (chevron with popup)
+                    Button {
+                        showingScorePicker = true
+                    } label: {
+                        HStack(spacing: 2) {
+                            if minScoreFilter > 0 {
+                                Text("\(minScoreFilter)")
+                                    .font(.caption2)
+                                    .fontWeight(.bold)
+                            }
+                            Image(systemName: "chevron.up")
+                                .font(.body)
+                        }
+                        .frame(width: 40, height: 40)
+                    }
+                    .foregroundColor(minScoreFilter > 0 ? .accentColor : .primary)
                 }
                 .background(.ultraThinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
@@ -117,7 +136,7 @@ struct ArticleListBottomBar: View {
 
                 Spacer()
 
-                // Search button (center)
+                // Search button (right)
                 if searchText != nil {
                     Button {
                         showingSearch.toggle()
@@ -136,30 +155,13 @@ struct ArticleListBottomBar: View {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
                     )
-
-                    Spacer()
-                }
-
-                // Sort order button (right)
-                if let sort = sortOrder {
-                    Button {
-                        sort.wrappedValue = sort.wrappedValue == .score ? .chronological : .score
-                    } label: {
-                        Image(systemName: sort.wrappedValue.iconName)
-                            .font(.body)
-                            .frame(width: 44, height: 44)
-                    }
-                    .foregroundColor(.primary)
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
-                    )
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
+        }
+        .sheet(isPresented: $showingScorePicker) {
+            ScoreSliderSheet(minScoreFilter: $minScoreFilter)
         }
         .sheet(isPresented: $showingFilterMenu) {
             FilterMenuSheet(
@@ -359,6 +361,78 @@ struct FilterMenuSheet: View {
 
     private var hasActiveFilters: Bool {
         minScoreFilter > 0 || readFilter != .all || showStarredOnly
+    }
+
+    private var scoreColor: Color {
+        switch minScoreFilter {
+        case 0..<40: return .red
+        case 40..<70: return .orange
+        default: return .green
+        }
+    }
+}
+
+// MARK: - Score Slider Sheet (compact popup for quick score selection)
+
+struct ScoreSliderSheet: View {
+    @Binding var minScoreFilter: Int
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                VStack(spacing: 12) {
+                    HStack {
+                        Text("Puntuación mínima")
+                            .font(.headline)
+                        Spacer()
+                        Text("\(minScoreFilter)")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(scoreColor)
+                    }
+
+                    Slider(value: Binding(
+                        get: { Double(minScoreFilter) },
+                        set: { minScoreFilter = Int($0) }
+                    ), in: 0...100, step: 10)
+                    .tint(scoreColor)
+
+                    // Quick select buttons
+                    HStack(spacing: 8) {
+                        ForEach([0, 30, 50, 70, 90], id: \.self) { score in
+                            Button {
+                                minScoreFilter = score
+                            } label: {
+                                Text(score == 0 ? "Todos" : "\(score)+")
+                                    .font(.caption)
+                                    .fontWeight(minScoreFilter == score ? .bold : .regular)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(minScoreFilter == score ? scoreColor.opacity(0.2) : Color.secondary.opacity(0.1))
+                                    .foregroundColor(minScoreFilter == score ? scoreColor : .secondary)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("Filtro de Calidad")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Listo") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+        #if os(iOS)
+        .presentationDetents([.height(250)])
+        #endif
     }
 
     private var scoreColor: Color {
