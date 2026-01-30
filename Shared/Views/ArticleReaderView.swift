@@ -57,7 +57,7 @@ struct ArticleReaderView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            ZStack(alignment: .bottom) {
                 ZStack {
                     if isLoading {
                         ProgressView("Cargando articulo...")
@@ -129,13 +129,16 @@ struct ArticleReaderView: View {
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
+                                // Bottom padding for floating toolbar
+                                Color.clear
+                                    .frame(height: 80)
                             }
                             .padding()
                         }
                     }
                 }
 
-                // Bottom toolbar
+                // Bottom toolbar (floating)
                 #if os(iOS)
                 HStack(spacing: 0) {
                     Button {

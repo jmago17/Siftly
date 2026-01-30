@@ -29,7 +29,7 @@ struct NavigationMenuSheet: View {
                 LiquidCrystalBackground()
                 List {
                     feedsSection
-                    smartFoldersSection
+                    smartTagsSection
                     smartFeedsSection
                 }
                 .scrollContentBackground(.hidden)
@@ -239,32 +239,32 @@ struct NavigationMenuSheet: View {
         }
     }
 
-    private var smartFoldersSection: some View {
+    private var smartTagsSection: some View {
         Section {
-            DisclosureGroup(isExpanded: $smartFoldersExpanded) {
-                if enabledSmartFolders.isEmpty {
-                    Text("No hay carpetas inteligentes activas")
+            DisclosureGroup(isExpanded: $smartTagsExpanded) {
+                if enabledSmartTags.isEmpty {
+                    Text("No hay etiquetas activas")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 } else {
-                    ForEach(enabledSmartFolders) { folder in
+                    ForEach(enabledSmartTags) { tag in
                         NavigationLink {
-                            SmartFolderNewsView(
-                                folder: folder,
-                                smartFoldersViewModel: smartFoldersViewModel,
+                            SmartTagNewsView(
+                                tag: tag,
+                                smartTagsViewModel: smartTagsViewModel,
                                 newsViewModel: newsViewModel,
                                 feedsViewModel: feedsViewModel,
                                 smartFeedsViewModel: smartFeedsViewModel
                             )
                         } label: {
                             HStack {
-                                Image(systemName: "folder.fill")
-                                    .foregroundColor(.blue)
-                                Text(folder.name)
+                                Image(systemName: "tag.fill")
+                                    .foregroundColor(tag.color)
+                                Text(tag.name)
                                     .lineLimit(1)
                                 Spacer()
-                                if folder.matchCount > 0 {
-                                    countPill(folder.matchCount, tint: .blue)
+                                if tagArticleCount(for: tag) > 0 {
+                                    countPill(tagArticleCount(for: tag), tint: tag.color)
                                 }
                             }
                         }
@@ -272,10 +272,10 @@ struct NavigationMenuSheet: View {
                 }
             } label: {
                 sectionHeader(
-                    title: "Carpetas Inteligentes",
-                    systemImage: "folder.fill",
-                    tint: .blue,
-                    count: enabledSmartFolders.count
+                    title: "Etiquetas",
+                    systemImage: "tag.fill",
+                    tint: .accentColor,
+                    count: enabledSmartTags.count
                 )
             }
         }
@@ -402,8 +402,12 @@ struct NavigationMenuSheet: View {
             .background(Color.white.opacity(0.18), in: Capsule())
     }
 
-    private var enabledSmartFolders: [SmartFolder] {
-        smartFoldersViewModel.smartFolders.filter { $0.isEnabled }
+    private var enabledSmartTags: [SmartTag] {
+        smartTagsViewModel.smartTags.filter { $0.isEnabled }
+    }
+
+    private func tagArticleCount(for tag: SmartTag) -> Int {
+        newsViewModel.newsItems.filter { $0.tagIDs.contains(tag.id) }.count
     }
 
     private var enabledSmartFeeds: [SmartFeed] {
@@ -540,6 +544,120 @@ struct SmartFolderNewsView: View {
     private var newsItems: [NewsItem] {
         newsViewModel.getNewsItems(smartFolderID: folder.id)
             .filter { folder.matchesFilters(for: $0) }
+    }
+
+    private var filteredItems: [NewsItem] {
+        var items = newsItems
+
+        switch readFilter {
+        case .all:
+            break
+        case .unread:
+            items = items.filter { !$0.isRead }
+        case .read:
+            items = items.filter { $0.isRead }
+        }
+
+        if showStarredOnly {
+            items = items.filter { $0.isFavorite }
+        }
+
+        if minScoreFilter > 0 {
+            items = items.filter { item in
+                guard let score = item.qualityScore?.overallScore else { return false }
+                return score >= minScoreFilter
+            }
+        }
+
+        return items.sorted { lhs, rhs in
+            if lhs.isRead != rhs.isRead { return !lhs.isRead }
+            let lhsDate = lhs.pubDate ?? Date.distantPast
+            let rhsDate = rhs.pubDate ?? Date.distantPast
+            return lhsDate > rhsDate
+        }
+    }
+
+    private var feedSettings: [UUID: RSSFeed] {
+        Dictionary(uniqueKeysWithValues: feedsViewModel.feeds.map { ($0.id, $0) })
+    }
+
+    private func shouldOpenInSafariReader(for item: NewsItem) -> Bool {
+        #if os(iOS)
+        return feedSettings[item.feedID]?.openInSafariReader ?? false
+        #else
+        return false
+        #endif
+    }
+}
+
+// MARK: - Smart Tag News View (for navigation from menu)
+
+struct SmartTagNewsView: View {
+    let tag: SmartTag
+    @ObservedObject var smartTagsViewModel: SmartTagsViewModel
+    @ObservedObject var newsViewModel: NewsViewModel
+    @ObservedObject var feedsViewModel: FeedsViewModel
+    @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
+
+    @State private var readFilter: ReadFilter = .all
+    @State private var showStarredOnly = false
+    @State private var minScoreFilter: Int = 0
+    @State private var selectedNewsItem: NewsItem?
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            if filteredItems.isEmpty {
+                ContentUnavailableView {
+                    Label("No hay artículos", systemImage: "tag")
+                } description: {
+                    Text("No hay artículos con esta etiqueta")
+                }
+            } else {
+                List {
+                    ForEach(filteredItems) { item in
+                        UnifiedNewsItemRow(
+                            newsItem: item,
+                            newsViewModel: newsViewModel,
+                            feedSettings: feedSettings,
+                            onTap: {
+                                selectedNewsItem = item
+                            }
+                        )
+                    }
+
+                    // Bottom padding for floating bar
+                    Color.clear
+                        .frame(height: 70)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
+            }
+
+            ArticleListBottomBar(
+                readFilter: $readFilter,
+                showStarredOnly: $showStarredOnly,
+                minScoreFilter: $minScoreFilter
+            )
+        }
+        .navigationTitle(tag.name)
+        .sheet(item: $selectedNewsItem) { item in
+            Group {
+                if shouldOpenInSafariReader(for: item),
+                   let url = URL(string: item.link) {
+                    SafariReaderView(url: url)
+                } else {
+                    ArticleReaderView(newsItem: item)
+                }
+            }
+            #if os(iOS)
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            #endif
+        }
+    }
+
+    private var newsItems: [NewsItem] {
+        newsViewModel.newsItems.filter { $0.tagIDs.contains(tag.id) }
     }
 
     private var filteredItems: [NewsItem] {
