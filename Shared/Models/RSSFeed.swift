@@ -17,6 +17,7 @@ struct RSSFeed: Codable, Identifiable {
     var openInSafariReader: Bool
     var showImagesInList: Bool
     var logoURL: String?
+    var autoMarkReadAfterDays: Int?  // nil = disabled, otherwise auto-mark as read after X days
 
     init(name: String, url: String, logoURL: String? = nil) {
         self.id = UUID()
@@ -30,6 +31,7 @@ struct RSSFeed: Codable, Identifiable {
         self.openInSafariReader = false
         self.showImagesInList = true
         self.logoURL = logoURL
+        self.autoMarkReadAfterDays = nil
     }
 
     enum CodingKeys: String, CodingKey {
@@ -44,6 +46,7 @@ struct RSSFeed: Codable, Identifiable {
         case openInSafariReader
         case showImagesInList
         case logoURL
+        case autoMarkReadAfterDays
     }
 
     init(from decoder: Decoder) throws {
@@ -59,6 +62,7 @@ struct RSSFeed: Codable, Identifiable {
         openInSafariReader = try container.decodeIfPresent(Bool.self, forKey: .openInSafariReader) ?? false
         showImagesInList = try container.decodeIfPresent(Bool.self, forKey: .showImagesInList) ?? true
         logoURL = try container.decodeIfPresent(String.self, forKey: .logoURL)
+        autoMarkReadAfterDays = try container.decodeIfPresent(Int.self, forKey: .autoMarkReadAfterDays)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -74,5 +78,6 @@ struct RSSFeed: Codable, Identifiable {
         try container.encode(openInSafariReader, forKey: .openInSafariReader)
         try container.encode(showImagesInList, forKey: .showImagesInList)
         try container.encodeIfPresent(logoURL, forKey: .logoURL)
+        try container.encodeIfPresent(autoMarkReadAfterDays, forKey: .autoMarkReadAfterDays)
     }
 }

@@ -242,6 +242,21 @@ struct NavigationMenuSheet: View {
     private var smartTagsSection: some View {
         Section {
             DisclosureGroup(isExpanded: $smartTagsExpanded) {
+                // Manage tags link
+                NavigationLink {
+                    SmartTagsListView(
+                        smartTagsViewModel: smartTagsViewModel,
+                        newsViewModel: newsViewModel
+                    )
+                } label: {
+                    HStack {
+                        Image(systemName: "gearshape")
+                            .foregroundColor(.secondary)
+                        Text("Gestionar etiquetas")
+                            .foregroundColor(.secondary)
+                    }
+                }
+
                 if enabledSmartTags.isEmpty {
                     Text("No hay etiquetas activas")
                         .font(.caption)
@@ -476,7 +491,10 @@ private struct LiquidCrystalBackground: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        (colorScheme == .dark ? Color.black : Color.white)
+        // Light: F2F2F6, Dark: 1C1C1E (iOS system dark background)
+        (colorScheme == .dark
+            ? Color(red: 0.110, green: 0.110, blue: 0.118)
+            : Color(red: 0.949, green: 0.949, blue: 0.965))
             .ignoresSafeArea()
     }
 }
