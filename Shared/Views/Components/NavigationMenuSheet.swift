@@ -618,6 +618,7 @@ struct SmartFolderNewsView: View {
         feedsViewModel: FeedsViewModel(),
         smartFoldersViewModel: SmartFoldersViewModel(),
         smartFeedsViewModel: SmartFeedsViewModel(),
+        smartTagsViewModel: SmartTagsViewModel(),
         newsViewModel: NewsViewModel()
     )
 }
