@@ -54,40 +54,7 @@ struct NewsListView: View {
                 }
             } else {
                 ZStack(alignment: .bottom) {
-                    VStack(spacing: 0) {
-                        // Filter chips
-                        if readFilter != .all || minScoreFilter > 0 {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 8) {
-                                    if readFilter != .all {
-                                        FilterChip(
-                                            text: readFilter.rawValue,
-                                            systemImage: "book"
-                                        ) {
-                                            readFilter = .all
-                                        }
-                                    }
-
-                                    if minScoreFilter > 0 {
-                                        FilterChip(
-                                            text: "Score ≥ \(minScoreFilter)",
-                                            systemImage: "star"
-                                        ) {
-                                            minScoreFilter = 0
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal)
-                                .padding(.vertical, 8)
-                            }
-                            #if os(iOS)
-                            .background(Color(uiColor: .systemBackground))
-                            #else
-                            .background(Color(nsColor: .windowBackgroundColor))
-                            #endif
-                        }
-
-                        List {
+                    List {
                             ForEach(Array(filteredDeduplicatedNews.enumerated()), id: \.element.id) { index, item in
                                 UnifiedArticleRow(
                                     newsItem: item,
@@ -135,9 +102,8 @@ struct NewsListView: View {
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
                         }
-                        .refreshable {
-                            await refreshNews()
-                        }
+                    .refreshable {
+                        await refreshNews()
                     }
 
                     ArticleListBottomBar(
@@ -145,6 +111,7 @@ struct NewsListView: View {
                         showStarredOnly: $showStarredOnly,
                         minScoreFilter: $minScoreFilter,
                         sortOrder: $sortOrder,
+                        searchText: $searchText,
                         onMarkAllAsRead: {
                             markAllVisibleAsRead()
                         }
@@ -153,11 +120,6 @@ struct NewsListView: View {
             }
         }
         .navigationTitle(smartFeedTitle)
-        #if os(iOS)
-        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
-        #else
-        .searchable(text: $searchText)
-        #endif
         .overlay {
             if isRefreshing {
                 ProgressView("Actualizando noticias...")

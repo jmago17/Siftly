@@ -469,38 +469,11 @@ private struct NavMenuFeedFolderSection: Identifiable {
 }
 
 private struct LiquidCrystalBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.08, green: 0.12, blue: 0.22),
-                    Color(red: 0.05, green: 0.08, blue: 0.16),
-                    Color(red: 0.02, green: 0.04, blue: 0.1)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+        (colorScheme == .dark ? Color.black : Color.white)
             .ignoresSafeArea()
-
-            Circle()
-                .fill(Color.cyan.opacity(0.25))
-                .frame(width: 240, height: 240)
-                .blur(radius: 60)
-                .offset(x: -140, y: -180)
-
-            Circle()
-                .fill(Color.blue.opacity(0.22))
-                .frame(width: 280, height: 280)
-                .blur(radius: 70)
-                .offset(x: 150, y: -40)
-
-            RoundedRectangle(cornerRadius: 120, style: .continuous)
-                .fill(Color.white.opacity(0.08))
-                .frame(width: 320, height: 180)
-                .blur(radius: 45)
-                .rotationEffect(.degrees(-18))
-                .offset(x: -90, y: 220)
-        }
     }
 }
 
