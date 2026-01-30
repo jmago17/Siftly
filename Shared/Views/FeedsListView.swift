@@ -687,8 +687,8 @@ struct EditFeedFolderView: View {
             feedsViewModel: FeedsViewModel(),
             newsViewModel: NewsViewModel(),
             smartFoldersViewModel: SmartFoldersViewModel(),
-            smartFeedsViewModel: SmartFeedsViewModel(),
-            smartTagsViewModel: SmartTagsViewModel()
+            smartTagsViewModel: SmartTagsViewModel(),
+            smartFeedsViewModel: SmartFeedsViewModel()
         )
     }
 }

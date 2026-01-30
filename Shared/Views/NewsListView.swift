@@ -557,8 +557,8 @@ struct BulkActionsView: View {
             newsViewModel: NewsViewModel(),
             feedsViewModel: FeedsViewModel(),
             smartFoldersViewModel: SmartFoldersViewModel(),
-            smartFeedsViewModel: SmartFeedsViewModel(),
-            smartTagsViewModel: SmartTagsViewModel()
+            smartTagsViewModel: SmartTagsViewModel(),
+            smartFeedsViewModel: SmartFeedsViewModel()
         )
     }
 }

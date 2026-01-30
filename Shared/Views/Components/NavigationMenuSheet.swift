@@ -617,8 +617,8 @@ struct SmartFolderNewsView: View {
     NavigationMenuSheet(
         feedsViewModel: FeedsViewModel(),
         smartFoldersViewModel: SmartFoldersViewModel(),
-        smartFeedsViewModel: SmartFeedsViewModel(),
         smartTagsViewModel: SmartTagsViewModel(),
+        smartFeedsViewModel: SmartFeedsViewModel(),
         newsViewModel: NewsViewModel()
     )
 }
