@@ -17,9 +17,13 @@ struct NavigationMenuSheet: View {
     @State private var smartFoldersExpanded = true
     @State private var smartTagsExpanded = true
     @State private var smartFeedsExpanded = true
+    @State private var showingSearch = false
+    @State private var showingAddFeed = false
+    @State private var showingAddFolder = false
+    @State private var showingAddSmartFeed = false
+    @State private var showingHelp = false
     @State private var smartFeedToEdit: SmartFeed?
     @State private var feedToEdit: RSSFeed?
-    @State private var showingAddSmartFeed = false
     @State private var tagToEdit: SmartTag?
     @AppStorage("selectedSmartFeedID") private var selectedSmartFeedIDValue = ""
     var showsCloseButton: Bool = true
@@ -30,6 +34,9 @@ struct NavigationMenuSheet: View {
             ZStack {
                 LiquidCrystalBackground()
                 List {
+                    if shouldShowLanding {
+                        landingSection
+                    }
                     feedsSection
                     smartFeedsSection
                     smartTagsSection
@@ -40,7 +47,54 @@ struct NavigationMenuSheet: View {
                     await refreshFeeds()
                 }
             }
-            .navigationTitle("Navegación")
+            .overlay(alignment: .bottomTrailing) {
+                VStack(spacing: 16) {
+                    HStack(spacing: 12) {
+                        // Search button
+                        Button {
+                            showingSearch = true
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                                .font(.title2)
+                                .padding(16)
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                        // Plus menu button
+                        Menu {
+                            Button {
+                                showingAddFeed = true
+                            } label: {
+                                Label("Add feed", systemImage: "plus")
+                            }
+                            Button {
+                                // Show add folder sheet using tagToEdit as nil via a dedicated sheet elsewhere
+                                // Trigger via a temp SmartTag with empty name will be handled in the added sheet below
+                                showingAddFolder = true
+                            } label: {
+                                Label("Add Folder", systemImage: "folder.badge.plus")
+                            }
+                            Button {
+                                showingAddSmartFeed = true
+                            } label: {
+                                Label("Add Smart feed", systemImage: "sparkles")
+                            }
+                            Button {
+                                tagToEdit = SmartTag(name: "", description: "")
+                            } label: {
+                                Label("Add tag", systemImage: "tag")
+                            }
+                        } label: {
+                            Image(systemName: "plus")
+                                .font(.title2)
+                                .padding(20)
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                    }
+                }
+                .padding(.trailing, 20)
+                .padding(.bottom, 24)
+            }
+            .navigationTitle("Crema")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if showsCloseButton {
@@ -50,11 +104,19 @@ struct NavigationMenuSheet: View {
                         }
                     }
                 }
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingSettings = true
-                    } label: {
-                        Image(systemName: "gearshape")
+                if showsCloseButton {
+                    ToolbarItem(placement: .primaryAction) {
+                        HStack(spacing: 12) {
+                            helpButton
+                            settingsButton
+                        }
+                    }
+                } else {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        HStack(spacing: 12) {
+                            helpButton
+                            settingsButton
+                        }
                     }
                 }
             }
@@ -81,6 +143,12 @@ struct NavigationMenuSheet: View {
                     feedsViewModel: feedsViewModel
                 )
             }
+            .sheet(isPresented: $showingAddFeed) {
+                AddFeedView(feedsViewModel: feedsViewModel)
+            }
+            .sheet(isPresented: $showingAddFolder) {
+                AddFeedFolderView(feedsViewModel: feedsViewModel)
+            }
             .sheet(isPresented: $showingAddSmartFeed) {
                 SmartFeedEditorView(
                     smartFeedsViewModel: smartFeedsViewModel,
@@ -89,16 +157,44 @@ struct NavigationMenuSheet: View {
                     allowsEmptyFeeds: false
                 )
             }
+            .sheet(isPresented: $showingSearch) {
+                NavigationStack {
+                    SearchView(
+                        feedsViewModel: feedsViewModel,
+                        newsViewModel: newsViewModel,
+                        smartTagsViewModel: smartTagsViewModel
+                    )
+                }
+            }
+            .sheet(isPresented: $showingHelp) {
+                NavigationStack {
+                    LandingOverviewView(hasFeeds: !feedsViewModel.feeds.isEmpty)
+                        .navigationTitle("Guía rápida")
+                        #if os(iOS)
+                        .navigationBarTitleDisplayMode(.inline)
+                        #endif
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cerrar") {
+                                    showingHelp = false
+                                }
+                            }
+                        }
+                }
+            }
             .sheet(item: $tagToEdit) { tag in
                 AddSmartTagView(smartTagsViewModel: smartTagsViewModel, existingTag: tag)
             }
             #else
             List {
+                if shouldShowLanding {
+                    landingSection
+                }
                 feedsSection
                 smartFoldersSection
                 smartFeedsSection
             }
-            .navigationTitle("Navegación")
+            .navigationTitle("Crema")
             .toolbar {
                 if showsCloseButton {
                     ToolbarItem(placement: .cancellationAction) {
@@ -108,10 +204,9 @@ struct NavigationMenuSheet: View {
                     }
                 }
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingSettings = true
-                    } label: {
-                        Image(systemName: "gearshape")
+                    HStack(spacing: 12) {
+                        helpButton
+                        settingsButton
                     }
                 }
             }
@@ -123,6 +218,19 @@ struct NavigationMenuSheet: View {
                     feedsViewModel: feedsViewModel,
                     smartTagsViewModel: smartTagsViewModel
                 )
+            }
+            .sheet(isPresented: $showingHelp) {
+                NavigationStack {
+                    LandingOverviewView(hasFeeds: !feedsViewModel.feeds.isEmpty)
+                        .navigationTitle("Guía rápida")
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cerrar") {
+                                    showingHelp = false
+                                }
+                            }
+                        }
+                }
             }
             .sheet(item: $smartFeedToEdit) { smartFeed in
                 SmartFeedEditorView(
@@ -139,6 +247,34 @@ struct NavigationMenuSheet: View {
                 )
             }
             #endif
+        }
+    }
+
+    private var shouldShowLanding: Bool {
+        feedsViewModel.feeds.isEmpty && smartFeedsViewModel.regularSmartFeeds.isEmpty
+    }
+
+    private var landingSection: some View {
+        Section {
+            LandingOverviewContent(hasFeeds: !feedsViewModel.feeds.isEmpty)
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+        }
+    }
+
+    private var helpButton: some View {
+        Button {
+            showingHelp = true
+        } label: {
+            Image(systemName: "questionmark.circle")
+        }
+    }
+
+    private var settingsButton: some View {
+        Button {
+            showingSettings = true
+        } label: {
+            Image(systemName: "gearshape")
         }
     }
 
@@ -196,7 +332,7 @@ struct NavigationMenuSheet: View {
                                         } label: {
                                             Label("Marcar leído", systemImage: "checkmark.circle")
                                         }
-                                        .tint(.blue)
+                                        .tint(.accentColor)
                                     }
                                     .contextMenu {
                                         Button {
@@ -296,7 +432,7 @@ struct NavigationMenuSheet: View {
                             } label: {
                                 Label("Editar", systemImage: "pencil")
                             }
-                            .tint(.blue)
+                            .tint(.accentColor)
                         }
                     }
                 }
@@ -741,6 +877,59 @@ struct SmartTagNewsView: View {
         #else
         return false
         #endif
+    }
+}
+
+struct SearchView: View {
+    @ObservedObject var feedsViewModel: FeedsViewModel
+    @ObservedObject var newsViewModel: NewsViewModel
+    @ObservedObject var smartTagsViewModel: SmartTagsViewModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var query = ""
+
+    var body: some View {
+        VStack {
+            List {
+                if !query.isEmpty {
+                    Section("Articles") {
+                        ForEach(filteredArticles.prefix(20)) { item in
+                            VStack(alignment: .leading) {
+                                Text(item.title).font(.headline)
+                                Text(item.summary).font(.caption).lineLimit(2).foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    Section("Feeds") {
+                        ForEach(filteredFeeds.prefix(20)) { feed in
+                            Text(feed.name)
+                        }
+                    }
+                    Section("Tags") {
+                        ForEach(filteredTags.prefix(20)) { tag in
+                            Text(tag.name)
+                        }
+                    }
+                } else {
+                    ContentUnavailableView("Type to search", systemImage: "magnifyingglass")
+                }
+            }
+        }
+        .navigationTitle("Search")
+        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always))
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
+    }
+
+    private var filteredArticles: [NewsItem] {
+        let q = query.lowercased()
+        return newsViewModel.newsItems.filter { $0.title.lowercased().contains(q) || $0.summary.lowercased().contains(q) }
+    }
+    private var filteredFeeds: [RSSFeed] {
+        let q = query.lowercased()
+        return feedsViewModel.feeds.filter { $0.name.lowercased().contains(q) || $0.url.lowercased().contains(q) }
+    }
+    private var filteredTags: [SmartTag] {
+        let q = query.lowercased()
+        return smartTagsViewModel.smartTags.filter { $0.name.lowercased().contains(q) }
     }
 }
 

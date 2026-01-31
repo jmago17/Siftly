@@ -186,7 +186,7 @@ final class FeedbinService {
         guard let creds = credentials else { throw FeedbinError.missingCredentials }
 
         var request = URLRequest(url: url)
-        request.setValue("RSSFilter/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("Crema/1.0", forHTTPHeaderField: "User-Agent")
         request.setValue(basicAuthHeader(username: creds.username, password: creds.password), forHTTPHeaderField: "Authorization")
 
         let (data, response) = try await session.data(for: request)

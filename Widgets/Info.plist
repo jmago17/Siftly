@@ -5,7 +5,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>RSS RAIder Widgets</string>
+    <string>Crema Widgets</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -24,8 +24,8 @@
     <dict>
         <key>NSExtensionAttributes</key>
         <dict>
-            <key>NSExtensionWidgetKind</key>
-            <string>RSSFilterWidget</string>
+        <key>NSExtensionWidgetKind</key>
+        <string>CremaWidget</string>
         </dict>
         <key>NSExtensionPointIdentifier</key>
         <string>com.apple.widgetkit-extension</string>

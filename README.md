@@ -1,4 +1,4 @@
-# RSSFilter
+# Crema
 
 AI-powered RSS reader with smart filtering and organization.
 
@@ -20,4 +20,3 @@ AI-powered RSS reader with smart filtering and organization.
 ## License
 
 MIT
-

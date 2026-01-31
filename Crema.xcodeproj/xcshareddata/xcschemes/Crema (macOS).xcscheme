@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A0100210"
-               BuildableName = "RSS RAIder.app"
-               BlueprintName = "RSSFilter (macOS)"
-               ReferencedContainer = "container:RSSFilter.xcodeproj">
+               BuildableName = "Crema.app"
+               BlueprintName = "Crema (macOS)"
+               ReferencedContainer = "container:Crema.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -44,9 +44,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A0100210"
-            BuildableName = "RSS RAIder.app"
-            BlueprintName = "RSSFilter (macOS)"
-            ReferencedContainer = "container:RSSFilter.xcodeproj">
+            BuildableName = "Crema.app"
+            BlueprintName = "Crema (macOS)"
+            ReferencedContainer = "container:Crema.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -61,9 +61,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A0100210"
-            BuildableName = "RSS RAIder.app"
-            BlueprintName = "RSSFilter (macOS)"
-            ReferencedContainer = "container:RSSFilter.xcodeproj">
+            BuildableName = "Crema.app"
+            BlueprintName = "Crema (macOS)"
+            ReferencedContainer = "container:Crema.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

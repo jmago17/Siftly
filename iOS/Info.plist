@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>RSS RAIder</string>
+	<string>Crema</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -74,6 +74,6 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSUserTrackingUsageDescription</key>
-	<string>RSS RAIder no rastrea tu actividad. Esta información no se utiliza.</string>
+	<string>Crema no rastrea tu actividad. Esta información no se utiliza.</string>
 </dict>
 </plist>

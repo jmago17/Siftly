@@ -142,6 +142,7 @@ struct SmartTagRow: View {
                 set: { _ in onToggle() }
             ))
             .labelsHidden()
+            .tint(tag.color)
         }
         .padding(.vertical, 4)
     }
@@ -160,6 +161,19 @@ struct AddSmartTagView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section("Ayuda") {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "tag.fill")
+                            .foregroundColor(.secondary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Las etiquetas IA ayudan a clasificar artículos por tema.")
+                            Text("Usa palabras clave claras y ajusta la prioridad para decidir qué temas pesan más.")
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
+
                 Section {
                     TextField("Nombre", text: $name)
 
@@ -183,6 +197,7 @@ struct AddSmartTagView: View {
                             get: { Double(priority) },
                             set: { priority = Int($0) }
                         ), in: 0...100, step: 5)
+                        .tint(colorFromName(selectedColor))
                     }
                 } header: {
                     Text("Prioridad")

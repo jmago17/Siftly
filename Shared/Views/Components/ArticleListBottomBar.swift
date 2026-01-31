@@ -182,7 +182,7 @@ struct ArticleListBottomBar: View {
                 Image(systemName: readFilter == .unread ? "circle.inset.filled" : "circle")
                     .font(.title3)
             }
-            .foregroundColor(readFilter == .unread ? .blue : .secondary)
+            .foregroundColor(readFilter == .unread ? .accentColor : .secondary)
 
             // Starred toggle
             Button {
@@ -201,7 +201,7 @@ struct ArticleListBottomBar: View {
                     Image(systemName: sortBinding.wrappedValue.iconName)
                         .font(.title3)
                 }
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
             }
 
             Divider()
@@ -221,7 +221,7 @@ struct ArticleListBottomBar: View {
                         .font(.caption)
                 }
             }
-            .foregroundColor(minScoreFilter > 0 ? .blue : .secondary)
+            .foregroundColor(minScoreFilter > 0 ? .accentColor : .secondary)
 
             // Actions menu
             if let markAllAsRead = onMarkAllAsRead {
@@ -472,7 +472,7 @@ struct ScoreFilterSheet: View {
                     if minScoreFilter > 0 {
                         HStack {
                             Image(systemName: "info.circle")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                             Text("Solo se mostrarán artículos con puntuación ≥ \(minScoreFilter)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)

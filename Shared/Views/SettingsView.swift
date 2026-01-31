@@ -52,7 +52,7 @@ struct SettingsView: View {
 
                     HStack {
                         Image(systemName: "info.circle")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                         Text("Disponible en iOS 18+ y macOS 15+")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -217,22 +217,6 @@ struct SettingsView: View {
                     Text("Los artículos marcados como leídos se eliminarán automáticamente después del tiempo especificado. Los favoritos nunca se eliminan.")
                 }
 
-                // Smart Folders Management
-                Section {
-                    NavigationLink {
-                        ManageSmartFoldersView(smartFoldersViewModel: smartFoldersViewModel)
-                    } label: {
-                        HStack {
-                            Label("Gestionar Carpetas", systemImage: "folder")
-                            Spacer()
-                            Text("\(smartFoldersViewModel.smartFolders.count)")
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                } header: {
-                    Text("Carpetas Inteligentes")
-                }
-
                 // Smart Tags Management
                 Section {
                     NavigationLink {
@@ -357,7 +341,7 @@ struct ManageSmartFoldersView: View {
                     if folder.matchCount > 0 {
                         Text("\(folder.matchCount) artículos")
                             .font(.caption2)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.accentColor)
                     }
                 }
                 .padding(.vertical, 4)
@@ -520,7 +504,7 @@ struct AppIconSettingsView: View {
                             Spacer()
                             if isSelected(option) {
                                 Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }

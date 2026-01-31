@@ -446,7 +446,7 @@ class NewsViewModel: ObservableObject {
             create: true
         )
 
-        let bundleID = Bundle.main.bundleIdentifier ?? "RSSFilter"
+        let bundleID = Bundle.main.bundleIdentifier ?? "Crema"
         let dir = base.appendingPathComponent(bundleID, isDirectory: true)
         if !FileManager.default.fileExists(atPath: dir.path) {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

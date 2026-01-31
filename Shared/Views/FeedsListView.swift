@@ -45,7 +45,7 @@ struct FeedsListView: View {
 
     var body: some View {
         contentView
-        .navigationTitle("Feeds")
+        .navigationTitle("Crema")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button {
@@ -161,20 +161,7 @@ struct FeedsListView: View {
     }
 
     private var emptyStateView: some View {
-        ContentUnavailableView {
-            Label("No hay feeds RSS", systemImage: "antenna.radiowaves.left.and.right")
-        } description: {
-            Text("Añade feeds RSS para comenzar a ver noticias")
-        } actions: {
-            Button("Añadir Feed") {
-                showingAddFeed = true
-            }
-            .buttonStyle(.borderedProminent)
-
-            Button("Nueva carpeta") {
-                showingAddFolder = true
-            }
-        }
+        LandingOverviewView(hasFeeds: !feedsViewModel.feeds.isEmpty)
     }
 
     private var feedsListView: some View {
@@ -266,6 +253,21 @@ struct FeedsListView: View {
                     }
                     .tint(.orange)
                 }
+                .contextMenu {
+                    Button {
+                        smartFeedToEdit = smartFeed
+                    } label: {
+                        Label("Editar", systemImage: "pencil")
+                    }
+
+                    if smartFeed.kind != .favorites {
+                        Button(role: .destructive) {
+                            smartFeedsViewModel.deleteSmartFeed(id: smartFeed.id)
+                        } label: {
+                            Label("Eliminar", systemImage: "trash")
+                        }
+                    }
+                }
             }
         }
     }
@@ -273,7 +275,7 @@ struct FeedsListView: View {
     private var smartFeedsHeader: some View {
         HStack {
             Image(systemName: "sparkles")
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
             Text("Smart Feeds")
             Spacer()
             if !sortedSmartFeeds.isEmpty {
@@ -418,7 +420,7 @@ struct FeedsListView: View {
             } label: {
                 Label("Mover", systemImage: "folder")
             }
-            .tint(.blue)
+            .tint(.accentColor)
 
             Button {
                 feedToRename = feed
@@ -554,7 +556,7 @@ struct SmartFeedRowView: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: iconSystemName)
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
                 .font(.title3)
 
             VStack(alignment: .leading, spacing: 4) {
@@ -572,8 +574,8 @@ struct SmartFeedRowView: View {
                 .font(.caption2)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.blue.opacity(0.15))
-                .foregroundColor(.blue)
+                .background(Color.accentColor.opacity(0.15))
+                .foregroundColor(.accentColor)
                 .clipShape(Capsule())
         }
         .padding(.vertical, 4)
@@ -678,6 +680,84 @@ struct EditFeedFolderView: View {
         updated.name = trimmed
         feedsViewModel.updateFeedFolder(updated)
         dismiss()
+    }
+}
+
+struct LandingOverviewContent: View {
+    let hasFeeds: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Bienvenido a Crema")
+                    .font(.title.bold())
+                Text("Tu lector RSS con IA para filtrar calidad y organizar temas.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            FeatureCard(
+                icon: "speedometer",
+                title: "AI Score",
+                description: "Una puntuación de 0 a 100 que resume la calidad del artículo. Te ayuda a priorizar lo más fiable y relevante."
+            )
+
+            FeatureCard(
+                icon: "sparkles",
+                title: "Smart Feeds",
+                description: "Combina varios feeds y reglas en una sola vista. Crea uno por tema y ajusta filtros de calidad."
+            )
+
+            FeatureCard(
+                icon: "tag",
+                title: "Etiquetas IA",
+                description: "La IA etiqueta cada artículo según tus palabras clave y prioridad para agrupar temas automáticamente."
+            )
+
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: hasFeeds ? "arrow.clockwise" : "plus.circle")
+                    .foregroundColor(.accentColor)
+                Text(hasFeeds
+                     ? "Actualiza tus feeds para ver el AI Score en acción."
+                     : "Añade tus primeros feeds desde la sección Feeds o con el botón +.")
+            }
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+    }
+}
+
+struct LandingOverviewView: View {
+    let hasFeeds: Bool
+
+    var body: some View {
+        ScrollView {
+            LandingOverviewContent(hasFeeds: hasFeeds)
+        }
+    }
+}
+
+private struct FeatureCard: View {
+    let icon: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        GroupBox {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: icon)
+                    .foregroundColor(.accentColor)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title)
+                        .font(.headline)
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 //
-//  RSSRAIderApp.swift
-//  RSS RAIder
+//  CremaApp.swift
+//  Crema
 //
 //  AI-powered RSS reader with smart filtering
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct RSSRAIderApp: App {
+struct CremaApp: App {
     init() {
         // Set default preferences if not already set
         if UserDefaults.standard.object(forKey: "openInAppBrowser") == nil {
@@ -28,6 +28,7 @@ struct RSSRAIderApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .tint(Color("AccentColor"))
         }
     }
 }

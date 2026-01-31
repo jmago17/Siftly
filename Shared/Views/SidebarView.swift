@@ -187,7 +187,7 @@ struct SmartFolderRowView: View {
     var body: some View {
         HStack {
             Image(systemName: "folder.fill")
-                .foregroundColor(.blue)
+                .foregroundColor(.accentColor)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(folder.name)
@@ -207,8 +207,8 @@ struct SmartFolderRowView: View {
                     .font(.caption)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.2))
-                    .foregroundColor(.blue)
+                    .background(Color.accentColor.opacity(0.2))
+                    .foregroundColor(.accentColor)
                     .clipShape(Capsule())
             }
         }

@@ -263,7 +263,7 @@ class FeedsViewModel: ObservableObject {
         
         var request = URLRequest(url: url)
         request.timeoutInterval = timeout
-        request.setValue("Mozilla/5.0 (compatible; RSSFilter/1.0)", forHTTPHeaderField: "User-Agent")
+        request.setValue("Mozilla/5.0 (compatible; Crema/1.0)", forHTTPHeaderField: "User-Agent")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         

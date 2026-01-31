@@ -277,20 +277,20 @@ private struct WidgetContentBuilder {
     }
 }
 
-struct RSSFilterWidget: Widget {
-    let kind: String = "RSSFilterWidget"
+struct CremaWidget: Widget {
+    let kind: String = "CremaWidget"
 
     var body: some WidgetConfiguration {
         AppIntentConfiguration(kind: kind, intent: ArticleSourceIntent.self, provider: Provider()) { entry in
-            RSSFilterWidgetView(entry: entry)
+            CremaWidgetView(entry: entry)
         }
-        .configurationDisplayName("RSSFilter")
+        .configurationDisplayName("Crema")
         .description("Noticias destacadas de tus fuentes.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 
-struct RSSFilterWidgetView: View {
+struct CremaWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let entry: WidgetEntry
 
@@ -360,15 +360,15 @@ private extension View {
 }
 
 @main
-struct RSSFilterWidgets: WidgetBundle {
+struct CremaWidgets: WidgetBundle {
     var body: some Widget {
-        RSSFilterWidget()
+        CremaWidget()
     }
 }
 
 private func sampleArticles() -> [WidgetArticle] {
     [
-        WidgetArticle(id: "1", title: "Titular destacado para el widget", feedID: UUID(), feedName: "RSS RAIder", link: "https://example.com", pubDate: Date(), qualityScore: 92),
+        WidgetArticle(id: "1", title: "Titular destacado para el widget", feedID: UUID(), feedName: "Crema", link: "https://example.com", pubDate: Date(), qualityScore: 92),
         WidgetArticle(id: "2", title: "Otra noticia interesante para tu resumen", feedID: UUID(), feedName: "Tech Feed", link: "https://example.com", pubDate: Date().addingTimeInterval(-3600), qualityScore: 80),
         WidgetArticle(id: "3", title: "Actualización rápida del día", feedID: UUID(), feedName: "Noticias", link: "https://example.com", pubDate: Date().addingTimeInterval(-7200), qualityScore: 76),
         WidgetArticle(id: "4", title: "Resumen breve para el modo grande", feedID: UUID(), feedName: "Economía", link: "https://example.com", pubDate: Date().addingTimeInterval(-10800), qualityScore: 70)

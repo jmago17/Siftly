@@ -51,7 +51,7 @@ struct UnifiedArticleRowView: View {
                                     Image(systemName: "chevron.down")
                                         .font(.caption2)
                                 }
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                             }
                             .buttonStyle(.plain)
                         } else {
@@ -303,7 +303,7 @@ struct UnifiedArticleRow: View {
                     systemImage: newsItem.isRead ? "envelope.open.fill" : "envelope.fill"
                 )
             }
-            .tint(newsItem.isRead ? .orange : .blue)
+            .tint(newsItem.isRead ? .orange : .accentColor)
         }
         .sheet(item: $selectedSource) { source in
             Group {
@@ -469,7 +469,7 @@ struct UnifiedNewsItemRow: View {
                     systemImage: newsItem.isRead ? "envelope.open.fill" : "envelope.fill"
                 )
             }
-            .tint(newsItem.isRead ? .orange : .blue)
+            .tint(newsItem.isRead ? .orange : .accentColor)
         }
     }
 

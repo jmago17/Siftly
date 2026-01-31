@@ -36,7 +36,7 @@ struct SmartFeedsManagerView: View {
                             Spacer()
                             if selectedSmartFeedID == nil {
                                 Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                             }
                         }
                     }
@@ -48,7 +48,7 @@ struct SmartFeedsManagerView: View {
                         } label: {
                             HStack {
                                 Image(systemName: smartFeed.iconSystemName)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(smartFeed.name)
                                         .font(.headline)
@@ -59,7 +59,7 @@ struct SmartFeedsManagerView: View {
                                 Spacer()
                                 if selectedSmartFeedID == smartFeed.id {
                                     Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
+                                        .foregroundColor(.accentColor)
                                 }
                             }
                         }
@@ -73,7 +73,7 @@ struct SmartFeedsManagerView: View {
                         } label: {
                             HStack {
                                 Image(systemName: smartFeed.iconSystemName)
-                                    .foregroundColor(.blue)
+                                    .foregroundColor(.accentColor)
                                 Text(smartFeed.name)
                                 Spacer()
                                 Image(systemName: "pencil")
@@ -154,6 +154,19 @@ struct SmartFeedEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section("Ayuda") {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "sparkles")
+                            .foregroundColor(.accentColor)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Un Smart Feed combina varios feeds y filtros de IA en una sola vista.")
+                            Text("Consejo: agrupa temas relacionados y ajusta el filtro de calidad para priorizar lo mejor.")
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
+
                 Section("Nombre") {
                     TextField("Nombre del smart feed", text: $name)
                         #if os(iOS)
@@ -259,12 +272,18 @@ private struct SymbolPicker: View {
     @Binding var selectedSymbol: String
 
     private let symbols = [
-        "sparkles", "star.fill", "tray.full", "newspaper",
-        "bolt.fill", "brain.head.profile", "bookmark.fill", "flame.fill",
-        "globe", "mic.fill", "bell.fill", "paperplane.fill",
-        "chart.bar.fill", "chart.line.uptrend.xyaxis", "bubble.left.and.bubble.right.fill", "checkmark.seal.fill",
-        "folder.fill", "tag.fill", "lightbulb.fill", "person.crop.circle.fill",
-        "leaf.fill", "moon.fill", "sun.max.fill", "clock.fill"
+        "sparkles", "wand.and.stars", "star.fill", "star.circle.fill",
+        "tray.full", "list.bullet.rectangle", "newspaper", "doc.text.image",
+        "bolt.fill", "bolt.circle.fill", "brain.head.profile", "lightbulb.fill",
+        "bookmark.fill", "book.fill", "flame.fill", "leaf.fill",
+        "globe", "network", "mic.fill", "megaphone.fill",
+        "bell.fill", "paperplane.fill", "envelope.badge",
+        "chart.bar.fill", "chart.line.uptrend.xyaxis", "chart.pie.fill", "waveform.path.ecg",
+        "bubble.left.and.bubble.right.fill", "checkmark.seal.fill", "shield.checkerboard",
+        "folder.fill", "tag.fill", "flag.fill", "map.fill",
+        "camera.fill", "film.fill", "music.note.list", "gamecontroller.fill",
+        "graduationcap.fill", "briefcase.fill", "person.crop.circle.fill",
+        "heart.fill", "moon.fill", "sun.max.fill", "clock.fill", "calendar"
     ]
 
     private let columns = [
@@ -294,7 +313,7 @@ private struct SymbolPicker: View {
                             .frame(width: 34, height: 34)
                             .background(
                                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(selectedSymbol == symbol ? Color.blue.opacity(0.2) : Color.clear)
+                                    .fill(selectedSymbol == symbol ? Color.accentColor.opacity(0.2) : Color.clear)
                             )
                     }
                     .buttonStyle(.plain)

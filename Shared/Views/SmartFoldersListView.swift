@@ -245,7 +245,7 @@ struct SmartFolderDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Image(systemName: folder.isEnabled ? "folder.fill" : "folder")
-                            .foregroundColor(folder.isEnabled ? .blue : .gray)
+                            .foregroundColor(folder.isEnabled ? .accentColor : .gray)
 
                         Text(folder.name)
                             .font(.headline)
@@ -266,8 +266,8 @@ struct SmartFolderDetailView: View {
                             .fontWeight(.bold)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color.blue.opacity(0.2))
-                            .foregroundColor(.blue)
+                            .background(Color.accentColor.opacity(0.2))
+                            .foregroundColor(.accentColor)
                             .clipShape(Capsule())
                     }
 

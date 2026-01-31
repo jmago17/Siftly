@@ -16,7 +16,7 @@ class OPMLService {
         <?xml version="1.0" encoding="UTF-8"?>
         <opml version="2.0">
             <head>
-                <title>RSSFilter Feed List</title>
+                <title>Crema Feed List</title>
                 <dateCreated>\(dateFormatter.string(from: Date()))</dateCreated>
             </head>
             <body>

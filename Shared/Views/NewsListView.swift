@@ -398,8 +398,8 @@ struct FilterChip: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(Color.blue.opacity(0.2))
-        .foregroundColor(.blue)
+        .background(Color.accentColor.opacity(0.2))
+        .foregroundColor(.accentColor)
         .clipShape(Capsule())
     }
 }
@@ -440,7 +440,7 @@ struct BulkActionsView: View {
 
                         HStack {
                             Image(systemName: "info.circle")
-                                .foregroundColor(.blue)
+                                .foregroundColor(.accentColor)
                             Text("Se marcarán como leídas las noticias con puntuación < \(threshold)")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
