@@ -16,6 +16,7 @@ struct FeedNewsView: View {
     @ObservedObject var feedsViewModel: FeedsViewModel
     @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
     var smartFoldersViewModel: SmartFoldersViewModel = SmartFoldersViewModel()
+    var smartTagsViewModel: SmartTagsViewModel = SmartTagsViewModel()
 
     @State private var isRefreshing = false
     @State private var readFilter: ReadFilter = .all
@@ -49,7 +50,8 @@ struct FeedNewsView: View {
                         UnifiedArticleRow(
                             newsItem: item,
                             newsViewModel: newsViewModel,
-                            feedSettings: feedSettings
+                            feedSettings: feedSettings,
+                            tagSettings: tagSettings
                         )
                         .contextMenu {
                             Button {
@@ -268,6 +270,10 @@ struct FeedNewsView: View {
 
     private var feedSettings: [UUID: RSSFeed] {
         Dictionary(uniqueKeysWithValues: feedsViewModel.feeds.map { ($0.id, $0) })
+    }
+
+    private var tagSettings: [UUID: SmartTag] {
+        Dictionary(uniqueKeysWithValues: smartTagsViewModel.smartTags.map { ($0.id, $0) })
     }
 
     private func shareFeedURL() {

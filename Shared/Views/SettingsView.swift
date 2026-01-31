@@ -13,6 +13,7 @@ struct SettingsView: View {
     @ObservedObject var smartFoldersViewModel: SmartFoldersViewModel
     @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
     @ObservedObject var feedsViewModel: FeedsViewModel
+    @ObservedObject var smartTagsViewModel: SmartTagsViewModel
 
     @State private var showingOPML = false
     @State private var iCloudSyncEnabled = true
@@ -21,15 +22,17 @@ struct SettingsView: View {
     @State private var feedbinPassword: String
     @State private var feedbinAlertMessage = ""
     @State private var showingFeedbinAlert = false
+    @State private var showingAddSmartFeed = false
     @AppStorage("feedSource") private var feedSourceRaw = FeedSource.rss.rawValue
     @AppStorage("refreshOnLaunch") private var refreshOnLaunch = true
     @AppStorage("deleteReadArticlesAfterDays") private var deleteReadArticlesAfterDays = 0
 
-    init(newsViewModel: NewsViewModel, smartFoldersViewModel: SmartFoldersViewModel, smartFeedsViewModel: SmartFeedsViewModel, feedsViewModel: FeedsViewModel) {
+    init(newsViewModel: NewsViewModel, smartFoldersViewModel: SmartFoldersViewModel, smartFeedsViewModel: SmartFeedsViewModel, feedsViewModel: FeedsViewModel, smartTagsViewModel: SmartTagsViewModel) {
         self.newsViewModel = newsViewModel
         self.smartFoldersViewModel = smartFoldersViewModel
         self.smartFeedsViewModel = smartFeedsViewModel
         self.feedsViewModel = feedsViewModel
+        self.smartTagsViewModel = smartTagsViewModel
         _iCloudSyncEnabled = State(initialValue: feedsViewModel.iCloudSyncEnabled)
         let creds = FeedbinService.shared.credentials
         _feedbinUsername = State(initialValue: creds?.username ?? "")
@@ -230,6 +233,50 @@ struct SettingsView: View {
                     Text("Carpetas Inteligentes")
                 }
 
+                // Smart Tags Management
+                Section {
+                    NavigationLink {
+                        SmartTagsListView(
+                            smartTagsViewModel: smartTagsViewModel,
+                            newsViewModel: newsViewModel
+                        )
+                    } label: {
+                        HStack {
+                            Label("Gestionar Etiquetas", systemImage: "tag")
+                            Spacer()
+                            Text("\(smartTagsViewModel.smartTags.count)")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Etiquetas Inteligentes")
+                }
+
+                // Smart Feeds Management
+                Section {
+                    NavigationLink {
+                        ManageSmartFeedsView(
+                            smartFeedsViewModel: smartFeedsViewModel,
+                            feedsViewModel: feedsViewModel
+                        )
+                    } label: {
+                        HStack {
+                            Label("Gestionar Smart Feeds", systemImage: "sparkles")
+                            Spacer()
+                            Text("\(smartFeedsViewModel.regularSmartFeeds.count)")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    Button {
+                        showingAddSmartFeed = true
+                    } label: {
+                        Label("Añadir Smart Feed", systemImage: "plus")
+                    }
+                } header: {
+                    Text("Smart Feeds")
+                }
+
                 // About Section
                 Section {
                     HStack {
@@ -255,6 +302,14 @@ struct SettingsView: View {
             #endif
             .sheet(isPresented: $showingOPML) {
                 OPMLImportExportView(feedsViewModel: feedsViewModel)
+            }
+            .sheet(isPresented: $showingAddSmartFeed) {
+                SmartFeedEditorView(
+                    smartFeedsViewModel: smartFeedsViewModel,
+                    feedsViewModel: feedsViewModel,
+                    smartFeed: nil,
+                    allowsEmptyFeeds: false
+                )
             }
             .alert("Feedbin", isPresented: $showingFeedbinAlert) {
                 Button("OK", role: .cancel) { }
@@ -339,12 +394,91 @@ struct ManageSmartFoldersView: View {
     }
 }
 
+struct ManageSmartFeedsView: View {
+    @ObservedObject var smartFeedsViewModel: SmartFeedsViewModel
+    @ObservedObject var feedsViewModel: FeedsViewModel
+    @State private var showingAddFeed = false
+    @State private var feedToEdit: SmartFeed?
+
+    var body: some View {
+        List {
+            ForEach(smartFeedsViewModel.regularSmartFeeds) { smartFeed in
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Toggle(isOn: Binding(
+                            get: { smartFeed.isEnabled },
+                            set: { _ in smartFeedsViewModel.toggleSmartFeed(id: smartFeed.id) }
+                        )) {
+                            HStack {
+                                Image(systemName: smartFeed.iconSystemName)
+                                    .foregroundColor(.accentColor)
+                                Text(smartFeed.name)
+                                    .font(.headline)
+                            }
+                        }
+                    }
+
+                    Text("\(smartFeed.feedIDs.isEmpty ? feedsViewModel.feeds.count : smartFeed.feedIDs.count) feeds incluidos")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 4)
+                .contextMenu {
+                    Button {
+                        feedToEdit = smartFeed
+                    } label: {
+                        Label("Editar", systemImage: "pencil")
+                    }
+
+                    Button(role: .destructive) {
+                        smartFeedsViewModel.deleteSmartFeed(id: smartFeed.id)
+                    } label: {
+                        Label("Eliminar", systemImage: "trash")
+                    }
+                }
+            }
+            .onDelete { indexSet in
+                indexSet.forEach { index in
+                    smartFeedsViewModel.deleteSmartFeed(id: smartFeedsViewModel.regularSmartFeeds[index].id)
+                }
+            }
+        }
+        .navigationTitle("Smart Feeds")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingAddFeed = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddFeed) {
+            SmartFeedEditorView(
+                smartFeedsViewModel: smartFeedsViewModel,
+                feedsViewModel: feedsViewModel,
+                smartFeed: nil,
+                allowsEmptyFeeds: false
+            )
+        }
+        .sheet(item: $feedToEdit) { smartFeed in
+            SmartFeedEditorView(
+                smartFeedsViewModel: smartFeedsViewModel,
+                feedsViewModel: feedsViewModel,
+                smartFeed: smartFeed,
+                allowsEmptyFeeds: smartFeed.kind == .favorites
+            )
+        }
+    }
+}
+
 #Preview {
     SettingsView(
         newsViewModel: NewsViewModel(),
         smartFoldersViewModel: SmartFoldersViewModel(),
         smartFeedsViewModel: SmartFeedsViewModel(),
-        feedsViewModel: FeedsViewModel()
+        feedsViewModel: FeedsViewModel(),
+        smartTagsViewModel: SmartTagsViewModel()
     )
 }
 

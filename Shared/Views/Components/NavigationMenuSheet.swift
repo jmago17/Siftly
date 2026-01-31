@@ -19,6 +19,8 @@ struct NavigationMenuSheet: View {
     @State private var smartFeedsExpanded = true
     @State private var smartFeedToEdit: SmartFeed?
     @State private var feedToEdit: RSSFeed?
+    @State private var showingAddSmartFeed = false
+    @State private var tagToEdit: SmartTag?
     @AppStorage("selectedSmartFeedID") private var selectedSmartFeedIDValue = ""
     var showsCloseButton: Bool = true
 
@@ -29,8 +31,8 @@ struct NavigationMenuSheet: View {
                 LiquidCrystalBackground()
                 List {
                     feedsSection
-                    smartTagsSection
                     smartFeedsSection
+                    smartTagsSection
                 }
                 .scrollContentBackground(.hidden)
                 .listStyle(.insetGrouped)
@@ -61,7 +63,8 @@ struct NavigationMenuSheet: View {
                     newsViewModel: newsViewModel,
                     smartFoldersViewModel: smartFoldersViewModel,
                     smartFeedsViewModel: smartFeedsViewModel,
-                    feedsViewModel: feedsViewModel
+                    feedsViewModel: feedsViewModel,
+                    smartTagsViewModel: smartTagsViewModel
                 )
             }
             .sheet(item: $smartFeedToEdit) { smartFeed in
@@ -77,6 +80,17 @@ struct NavigationMenuSheet: View {
                     feed: feed,
                     feedsViewModel: feedsViewModel
                 )
+            }
+            .sheet(isPresented: $showingAddSmartFeed) {
+                SmartFeedEditorView(
+                    smartFeedsViewModel: smartFeedsViewModel,
+                    feedsViewModel: feedsViewModel,
+                    smartFeed: nil,
+                    allowsEmptyFeeds: false
+                )
+            }
+            .sheet(item: $tagToEdit) { tag in
+                AddSmartTagView(smartTagsViewModel: smartTagsViewModel, existingTag: tag)
             }
             #else
             List {
@@ -106,7 +120,8 @@ struct NavigationMenuSheet: View {
                     newsViewModel: newsViewModel,
                     smartFoldersViewModel: smartFoldersViewModel,
                     smartFeedsViewModel: smartFeedsViewModel,
-                    feedsViewModel: feedsViewModel
+                    feedsViewModel: feedsViewModel,
+                    smartTagsViewModel: smartTagsViewModel
                 )
             }
             .sheet(item: $smartFeedToEdit) { smartFeed in
@@ -218,7 +233,7 @@ struct NavigationMenuSheet: View {
                         } label: {
                             HStack {
                                 Image(systemName: "folder")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.accentColor)
                                 Text(section.title)
                                 Spacer()
                                 if section.count > 0 {
@@ -232,7 +247,7 @@ struct NavigationMenuSheet: View {
                 sectionHeader(
                     title: "Feeds",
                     systemImage: "antenna.radiowaves.left.and.right",
-                    tint: .secondary,
+                    tint: .accentColor,
                     count: feedsViewModel.feeds.count
                 )
             }
@@ -242,21 +257,6 @@ struct NavigationMenuSheet: View {
     private var smartTagsSection: some View {
         Section {
             DisclosureGroup(isExpanded: $smartTagsExpanded) {
-                // Manage tags link
-                NavigationLink {
-                    SmartTagsListView(
-                        smartTagsViewModel: smartTagsViewModel,
-                        newsViewModel: newsViewModel
-                    )
-                } label: {
-                    HStack {
-                        Image(systemName: "gearshape")
-                            .foregroundColor(.secondary)
-                        Text("Gestionar etiquetas")
-                            .foregroundColor(.secondary)
-                    }
-                }
-
                 if enabledSmartTags.isEmpty {
                     Text("No hay etiquetas activas")
                         .font(.caption)
@@ -282,6 +282,21 @@ struct NavigationMenuSheet: View {
                                     countPill(tagArticleCount(for: tag), tint: tag.color)
                                 }
                             }
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                smartTagsViewModel.deleteTag(id: tag.id)
+                            } label: {
+                                Label("Eliminar", systemImage: "trash")
+                            }
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button {
+                                tagToEdit = tag
+                            } label: {
+                                Label("Editar", systemImage: "pencil")
+                            }
+                            .tint(.blue)
                         }
                     }
                 }
@@ -383,9 +398,16 @@ struct NavigationMenuSheet: View {
                 sectionHeader(
                     title: "Smart Feeds",
                     systemImage: "sparkles",
-                    tint: .blue,
+                    tint: .accentColor,
                     count: enabledSmartFeeds.count + 1
                 )
+            }
+            .contextMenu {
+                Button {
+                    showingAddSmartFeed = true
+                } label: {
+                    Label("Añadir Smart Feed", systemImage: "plus")
+                }
             }
         }
     }

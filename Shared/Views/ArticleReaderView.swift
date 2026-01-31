@@ -112,9 +112,11 @@ struct ArticleReaderView: View {
 
                                     Spacer()
 
-                                    Text(publishedDisplayText)
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
+                                    if let pubDate = newsItem?.pubDate {
+                                        Text(relativeTimeString(from: pubDate))
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
                                 }
 
                                 aiSummaryBox
@@ -597,11 +599,26 @@ struct ArticleReaderView: View {
         return "Autor desconocido"
     }
 
-    private var publishedDisplayText: String {
-        if let pubDate = newsItem?.pubDate {
-            return pubDate.formatted(date: .abbreviated, time: .shortened)
+    private func relativeTimeString(from date: Date) -> String {
+        let now = Date()
+        let interval = now.timeIntervalSince(date)
+
+        if interval < 60 {
+            return "Ahora"
+        } else if interval < 3600 {
+            let minutes = Int(interval / 60)
+            return "\(minutes)m"
+        } else if interval < 86400 {
+            let hours = Int(interval / 3600)
+            return "\(hours)h"
+        } else if interval < 604800 {
+            let days = Int(interval / 86400)
+            return "\(days)d"
+        } else {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "dd MMM"
+            return formatter.string(from: date)
         }
-        return "Fecha desconocida"
     }
 
     private var articleBodyText: String {
