@@ -82,6 +82,13 @@ class SmartFeedsViewModel: ObservableObject {
         saveToDisk()
     }
 
+    func toggleSmartFeed(id: UUID) {
+        if let index = smartFeeds.firstIndex(where: { $0.id == id }) {
+            smartFeeds[index].isEnabled.toggle()
+            saveToDisk()
+        }
+    }
+
     // MARK: - Persistence
 
     private func saveToDisk() {
