@@ -49,7 +49,7 @@ struct UnifiedArticleRowView: View {
                                     Text("\(newsItem.sources.count) fuentes")
                                         .font(.caption)
                                     Image(systemName: "chevron.down")
-                                        .font(.caption2)
+                                        .font(.caption)
                                 }
                                 .foregroundColor(.accentColor)
                             }
@@ -154,7 +154,7 @@ struct UnifiedArticleRowView: View {
         let logoURL = feedSettings[feedID]?.logoURL
 
         if let logoURL = logoURL {
-            CachedAsyncImage(urlString: logoURL, width: 22, height: 22, cornerRadius: 11)
+            CachedAsyncImage(urlString: logoURL, width: 28, height: 28, cornerRadius: 14)
         } else {
             let initial = String(feedName.prefix(1)).uppercased()
             let color = colorForFeed(feedName)
@@ -163,11 +163,11 @@ struct UnifiedArticleRowView: View {
                 Circle()
                     .fill(color.opacity(0.2))
                 Text(initial)
-                    .font(.caption2)
+                    .font(.caption)
                     .fontWeight(.bold)
                     .foregroundColor(color)
             }
-            .frame(width: 22, height: 22)
+            .frame(width: 28, height: 28)
         }
     }
 

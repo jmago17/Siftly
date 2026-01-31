@@ -197,7 +197,8 @@ struct FeedsListView: View {
             SmartFeedRowView(
                 name: "Todos los feeds",
                 feedCount: feedsViewModel.feeds.count,
-                iconSystemName: "tray.full"
+                iconSystemName: "tray.full",
+                unreadCount: unreadCountsByFeed.values.reduce(0, +)
             )
         }
         .simultaneousGesture(TapGesture().onEnded {
@@ -231,7 +232,8 @@ struct FeedsListView: View {
                     SmartFeedRowView(
                         name: smartFeed.name,
                         feedCount: smartFeed.feedIDs.isEmpty ? feedsViewModel.feeds.count : smartFeed.feedIDs.count,
-                        iconSystemName: smartFeed.iconSystemName
+                        iconSystemName: smartFeed.iconSystemName,
+                        unreadCount: unreadCount(for: smartFeed)
                     )
                 }
                 .simultaneousGesture(TapGesture().onEnded {
@@ -339,6 +341,10 @@ struct FeedsListView: View {
             HStack {
                 Text(section.title)
                 Spacer()
+                let unreadCount = unreadCountForFeeds(section.feeds)
+                if unreadCount > 0 {
+                    UnreadCountPill(count: unreadCount)
+                }
                 if section.count > 0 {
                     Text("\(section.count)")
                         .font(.caption)
@@ -374,7 +380,7 @@ struct FeedsListView: View {
                 smartFeedsViewModel: smartFeedsViewModel
             )
         } label: {
-            FeedDetailRowView(feed: feed)
+            FeedDetailRowView(feed: feed, unreadCount: unreadCountsByFeed[feed.id] ?? 0)
         }
         .contextMenu {
             Button {
@@ -506,6 +512,38 @@ struct FeedsListView: View {
             || feed.url.lowercased().contains(lowered)
         }
     }
+
+    private var unreadCountsByFeed: [UUID: Int] {
+        var counts: [UUID: Int] = [:]
+        for item in newsViewModel.newsItems where !item.isRead {
+            counts[item.feedID, default: 0] += 1
+        }
+        return counts
+    }
+
+    private func unreadCountForFeeds(_ feeds: [RSSFeed]) -> Int {
+        feeds.reduce(0) { partial, feed in
+            partial + (unreadCountsByFeed[feed.id] ?? 0)
+        }
+    }
+
+    private func unreadCount(for smartFeed: SmartFeed) -> Int {
+        let feedIDs = Set(smartFeed.feedIDs)
+        return newsViewModel.newsItems.filter { item in
+            guard !item.isRead else { return false }
+            if smartFeed.kind == .favorites && !item.isFavorite { return false }
+            if !feedIDs.isEmpty && !feedIDs.contains(item.feedID) { return false }
+            let content = "\(item.aiTitle) \(item.aiSummary)"
+            return smartFeed.filters.matches(
+                content: content,
+                url: item.link,
+                feedTitle: item.feedName,
+                author: item.author,
+                date: item.pubDate,
+                tagIDs: item.tagIDs
+            )
+        }.count
+    }
 }
 
 private struct FeedFolderSection: Identifiable {
@@ -522,6 +560,7 @@ private struct FeedFolderSection: Identifiable {
 
 struct FeedDetailRowView: View {
     let feed: RSSFeed
+    let unreadCount: Int
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -543,6 +582,10 @@ struct FeedDetailRowView: View {
             }
 
             Spacer()
+
+            if unreadCount > 0 {
+                UnreadCountPill(count: unreadCount)
+            }
         }
         .padding(.vertical, 6)
     }
@@ -552,6 +595,7 @@ struct SmartFeedRowView: View {
     let name: String
     let feedCount: Int
     let iconSystemName: String
+    var unreadCount: Int? = nil
 
     var body: some View {
         HStack(spacing: 12) {
@@ -570,6 +614,10 @@ struct SmartFeedRowView: View {
 
             Spacer()
 
+            if let unreadCount, unreadCount > 0 {
+                UnreadCountPill(count: unreadCount)
+            }
+
             Text("AI")
                 .font(.caption2)
                 .padding(.horizontal, 8)
@@ -579,6 +627,20 @@ struct SmartFeedRowView: View {
                 .clipShape(Capsule())
         }
         .padding(.vertical, 4)
+    }
+}
+
+private struct UnreadCountPill: View {
+    let count: Int
+
+    var body: some View {
+        Text("\(count)")
+            .font(.caption2)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.accentColor.opacity(0.15))
+            .foregroundColor(.accentColor)
+            .clipShape(Capsule())
     }
 }
 

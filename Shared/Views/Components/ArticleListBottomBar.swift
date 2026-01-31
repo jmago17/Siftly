@@ -73,8 +73,8 @@ struct ArticleListBottomBar: View {
                         showingFilterMenu = true
                     } label: {
                         Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                            .font(.body)
-                            .frame(width: 40, height: 40)
+                            .font(.title3)
+                            .frame(width: 44, height: 44)
                     }
                     .foregroundColor(hasActiveFilters ? .accentColor : .primary)
 
@@ -83,8 +83,8 @@ struct ArticleListBottomBar: View {
                         readFilter = readFilter == .unread ? .all : .unread
                     } label: {
                         Image(systemName: readFilter == .unread ? "circle.inset.filled" : "circle")
-                            .font(.body)
-                            .frame(width: 40, height: 40)
+                            .font(.title3)
+                            .frame(width: 44, height: 44)
                     }
                     .foregroundColor(readFilter == .unread ? .accentColor : .primary)
 
@@ -93,8 +93,8 @@ struct ArticleListBottomBar: View {
                         showStarredOnly.toggle()
                     } label: {
                         Image(systemName: showStarredOnly ? "star.fill" : "star")
-                            .font(.body)
-                            .frame(width: 40, height: 40)
+                            .font(.title3)
+                            .frame(width: 44, height: 44)
                     }
                     .foregroundColor(showStarredOnly ? .yellow : .primary)
 
@@ -104,8 +104,8 @@ struct ArticleListBottomBar: View {
                             sort.wrappedValue = sort.wrappedValue == .score ? .chronological : .score
                         } label: {
                             Image(systemName: sort.wrappedValue.iconName)
-                                .font(.body)
-                                .frame(width: 40, height: 40)
+                                .font(.title3)
+                                .frame(width: 44, height: 44)
                         }
                         .foregroundColor(.primary)
                     }
@@ -121,9 +121,9 @@ struct ArticleListBottomBar: View {
                                     .fontWeight(.bold)
                             }
                             Image(systemName: "chevron.up")
-                                .font(.body)
+                                .font(.title3)
                         }
-                        .frame(width: 40, height: 40)
+                        .frame(width: 44, height: 44)
                     }
                     .foregroundColor(minScoreFilter > 0 ? .accentColor : .primary)
                 }
@@ -136,6 +136,24 @@ struct ArticleListBottomBar: View {
 
                 Spacer()
 
+                // Actions on the right
+                if let markAllAsRead = onMarkAllAsRead {
+                    Button {
+                        markAllAsRead()
+                    } label: {
+                        Image(systemName: "checkmark.circle")
+                            .font(.title3)
+                            .frame(width: 44, height: 44)
+                    }
+                    .foregroundColor(.accentColor)
+                    .background(.ultraThinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                    )
+                }
+
                 // Search button (right)
                 if searchText != nil {
                     Button {
@@ -145,7 +163,7 @@ struct ArticleListBottomBar: View {
                         }
                     } label: {
                         Image(systemName: showingSearch ? "magnifyingglass.circle.fill" : "magnifyingglass")
-                            .font(.body)
+                            .font(.title3)
                             .frame(width: 44, height: 44)
                     }
                     .foregroundColor(showingSearch ? .accentColor : .primary)
@@ -180,7 +198,7 @@ struct ArticleListBottomBar: View {
                 readFilter = readFilter == .unread ? .all : .unread
             } label: {
                 Image(systemName: readFilter == .unread ? "circle.inset.filled" : "circle")
-                    .font(.title3)
+                    .font(.title2)
             }
             .foregroundColor(readFilter == .unread ? .accentColor : .secondary)
 
@@ -189,7 +207,7 @@ struct ArticleListBottomBar: View {
                 showStarredOnly.toggle()
             } label: {
                 Image(systemName: showStarredOnly ? "star.fill" : "star")
-                    .font(.title3)
+                    .font(.title2)
             }
             .foregroundColor(showStarredOnly ? .yellow : .secondary)
 
@@ -199,7 +217,7 @@ struct ArticleListBottomBar: View {
                     sortBinding.wrappedValue = sortBinding.wrappedValue == .score ? .chronological : .score
                 } label: {
                     Image(systemName: sortBinding.wrappedValue.iconName)
-                        .font(.title3)
+                        .font(.title2)
                 }
                 .foregroundColor(.accentColor)
             }
@@ -229,7 +247,7 @@ struct ArticleListBottomBar: View {
                     markAllAsRead()
                 } label: {
                     Image(systemName: "checkmark.circle")
-                        .font(.title3)
+                        .font(.title2)
                 }
                 .foregroundColor(.secondary)
             }

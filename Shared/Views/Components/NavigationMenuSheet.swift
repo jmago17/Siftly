@@ -317,6 +317,11 @@ struct NavigationMenuSheet: View {
                                             FeedIconView(urlString: feed.url, size: 20)
                                             Text(feed.name)
                                                 .lineLimit(1)
+                                            Spacer()
+                                            let unreadCount = unreadCountsByFeed[feed.id] ?? 0
+                                            if unreadCount > 0 {
+                                                countPill(unreadCount, tint: .accentColor)
+                                            }
                                         }
                                     }
                                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -372,6 +377,10 @@ struct NavigationMenuSheet: View {
                                     .foregroundColor(.accentColor)
                                 Text(section.title)
                                 Spacer()
+                                let unreadCount = unreadCountForFeeds(section.feeds)
+                                if unreadCount > 0 {
+                                    countPill(unreadCount, tint: .accentColor)
+                                }
                                 if section.count > 0 {
                                     countPill(section.count)
                                 }
@@ -414,8 +423,9 @@ struct NavigationMenuSheet: View {
                                 Text(tag.name)
                                     .lineLimit(1)
                                 Spacer()
-                                if tagArticleCount(for: tag) > 0 {
-                                    countPill(tagArticleCount(for: tag), tint: tag.color)
+                                let unreadCount = unreadCountsByTag[tag.id] ?? 0
+                                if unreadCount > 0 {
+                                    countPill(unreadCount, tint: tag.color)
                                 }
                             }
                         }
@@ -463,7 +473,8 @@ struct NavigationMenuSheet: View {
                     SmartFeedRowView(
                         name: "Todos los feeds",
                         feedCount: feedsViewModel.feeds.count,
-                        iconSystemName: "tray.full"
+                        iconSystemName: "tray.full",
+                        unreadCount: unreadAllFeedsCount
                     )
                 }
 
@@ -481,7 +492,8 @@ struct NavigationMenuSheet: View {
                     SmartFeedRowView(
                         name: favoritesSmartFeed.name,
                         feedCount: favoritesFeedCount,
-                        iconSystemName: favoritesSmartFeed.iconSystemName
+                        iconSystemName: favoritesSmartFeed.iconSystemName,
+                        unreadCount: unreadCount(for: favoritesSmartFeed)
                     )
                 }
                 .contextMenu {
@@ -512,7 +524,8 @@ struct NavigationMenuSheet: View {
                             SmartFeedRowView(
                                 name: smartFeed.name,
                                 feedCount: smartFeed.feedIDs.isEmpty ? feedsViewModel.feeds.count : smartFeed.feedIDs.count,
-                                iconSystemName: smartFeed.iconSystemName
+                                iconSystemName: smartFeed.iconSystemName,
+                                unreadCount: unreadCount(for: smartFeed)
                             )
                         }
                         .contextMenu {
@@ -575,12 +588,54 @@ struct NavigationMenuSheet: View {
             .background(Color.white.opacity(0.18), in: Capsule())
     }
 
-    private var enabledSmartTags: [SmartTag] {
-        smartTagsViewModel.smartTags.filter { $0.isEnabled }
+    private var unreadCountsByFeed: [UUID: Int] {
+        var counts: [UUID: Int] = [:]
+        for item in newsViewModel.newsItems where !item.isRead {
+            counts[item.feedID, default: 0] += 1
+        }
+        return counts
     }
 
-    private func tagArticleCount(for tag: SmartTag) -> Int {
-        newsViewModel.newsItems.filter { $0.tagIDs.contains(tag.id) }.count
+    private var unreadCountsByTag: [UUID: Int] {
+        var counts: [UUID: Int] = [:]
+        for item in newsViewModel.newsItems where !item.isRead {
+            for tagID in item.tagIDs {
+                counts[tagID, default: 0] += 1
+            }
+        }
+        return counts
+    }
+
+    private var unreadAllFeedsCount: Int {
+        unreadCountsByFeed.values.reduce(0, +)
+    }
+
+    private func unreadCountForFeeds(_ feeds: [RSSFeed]) -> Int {
+        feeds.reduce(0) { partial, feed in
+            partial + (unreadCountsByFeed[feed.id] ?? 0)
+        }
+    }
+
+    private func unreadCount(for smartFeed: SmartFeed) -> Int {
+        let feedIDs = Set(smartFeed.feedIDs)
+        return newsViewModel.newsItems.filter { item in
+            guard !item.isRead else { return false }
+            if smartFeed.kind == .favorites && !item.isFavorite { return false }
+            if !feedIDs.isEmpty && !feedIDs.contains(item.feedID) { return false }
+            let content = "\(item.aiTitle) \(item.aiSummary)"
+            return smartFeed.filters.matches(
+                content: content,
+                url: item.link,
+                feedTitle: item.feedName,
+                author: item.author,
+                date: item.pubDate,
+                tagIDs: item.tagIDs
+            )
+        }.count
+    }
+
+    private var enabledSmartTags: [SmartTag] {
+        smartTagsViewModel.smartTags.filter { $0.isEnabled }
     }
 
     private var enabledSmartFeeds: [SmartFeed] {
